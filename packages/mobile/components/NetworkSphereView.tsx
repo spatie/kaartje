@@ -1,14 +1,17 @@
-import { useCallback, useEffect, useRef } from "react";
-import { Text, View } from "react-native";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { AppState, Text, View } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { Canvas } from "@react-three/fiber";
 import { DottedGlobe } from "@kaartje/shared";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
+  withDelay,
   Easing,
 } from "react-native-reanimated";
 import { StyleSheet } from "react-native-unistyles";
+import { Button } from "./Button";
 
 const easeOut = Easing.bezier(0.2, 0.9, 0.1, 1);
 
@@ -16,7 +19,7 @@ interface NetworkSphereViewProps {
   onComplete?: () => void;
 }
 
-export function NetworkSphereView({ onComplete: _ }: NetworkSphereViewProps) {
+export function NetworkSphereView({ onComplete }: NetworkSphereViewProps) {
   // Intro text
   const textOpacity = useSharedValue(0);
   const textScale = useSharedValue(0);
@@ -26,8 +29,22 @@ export function NetworkSphereView({ onComplete: _ }: NetworkSphereViewProps) {
   const globeOpacity = useSharedValue(0);
   const globeTranslateY = useSharedValue(400);
 
+  // Bottom fade + button
+  const fadeOpacity = useSharedValue(0);
+  const buttonOpacity = useSharedValue(0);
+  const buttonTranslateY = useSharedValue(40);
+
   const canvasReady = useRef(false);
   const textDone = useRef(false);
+
+  // Pause rendering when app is backgrounded
+  const [frameloop, setFrameloop] = useState<"always" | "never">("always");
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (state) => {
+      setFrameloop(state === "active" ? "always" : "never");
+    });
+    return () => sub.remove();
+  }, []);
 
   const revealGlobe = useCallback(() => {
     const duration = 4000;
@@ -38,6 +55,22 @@ export function NetworkSphereView({ onComplete: _ }: NetworkSphereViewProps) {
     // Globe fades in from below
     globeOpacity.value = withTiming(1, { duration, easing: easeOut });
     globeTranslateY.value = withTiming(240, { duration, easing: easeOut });
+
+    // Gradient fades in with the globe
+    fadeOpacity.value = withDelay(
+      duration * 0.4,
+      withTiming(1, { duration: 3000, easing: easeOut }),
+    );
+
+    // Button fades in + slides up
+    buttonOpacity.value = withDelay(
+      duration * 0.5,
+      withTiming(1, { duration: 3000, easing: easeOut }),
+    );
+    buttonTranslateY.value = withDelay(
+      duration * 0.5,
+      withTiming(0, { duration: 3000, easing: easeOut }),
+    );
   }, []);
 
   const tryReveal = useCallback(() => {
@@ -75,10 +108,23 @@ export function NetworkSphereView({ onComplete: _ }: NetworkSphereViewProps) {
     transform: [{ translateY: globeTranslateY.value }],
   }));
 
+  const fadeStyle = useAnimatedStyle(() => ({
+    opacity: fadeOpacity.value,
+  }));
+
+  const buttonStyle = useAnimatedStyle(() => ({
+    opacity: buttonOpacity.value,
+    transform: [{ translateY: buttonTranslateY.value }],
+  }));
+
   return (
     <View style={styles.container}>
       <Animated.View style={[styles.globe, globeStyle]}>
-        <Canvas camera={{ position: [0, 0, 9], fov: 45 }} onCreated={handleCanvasCreated}>
+        <Canvas
+          camera={{ position: [0, 0, 9], fov: 45 }}
+          frameloop={frameloop}
+          onCreated={handleCanvasCreated}
+        >
           <DottedGlobe />
         </Canvas>
       </Animated.View>
@@ -88,11 +134,20 @@ export function NetworkSphereView({ onComplete: _ }: NetworkSphereViewProps) {
         <Text style={styles.title}>Kaartje</Text>
         <Text style={styles.subtitle}>Postcards from around the world.</Text>
       </Animated.View>
+
+      <Animated.View style={[styles.fadeOverlay, fadeStyle]} pointerEvents="none">
+        <LinearGradient colors={["transparent", "#0a0a0c"]} style={styles.fade} />
+        <View style={styles.fadeSolid} />
+      </Animated.View>
+
+      <Animated.View style={[styles.buttonOverlay, buttonStyle]}>
+        <Button onPress={onComplete}>Send a postcard</Button>
+      </Animated.View>
     </View>
   );
 }
 
-const styles = StyleSheet.create((theme, _rt) => ({
+const styles = StyleSheet.create((theme, rt) => ({
   container: {
     flex: 1,
     alignSelf: "stretch",
@@ -127,5 +182,25 @@ const styles = StyleSheet.create((theme, _rt) => ({
     fontSize: 16,
     color: theme.colors.inkFaded,
     textAlign: "center",
+  },
+  fadeOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
+  fade: {
+    height: 80,
+  },
+  fadeSolid: {
+    height: rt.insets.bottom + theme.space(16),
+    backgroundColor: theme.colors.night,
+  },
+  buttonOverlay: {
+    position: "absolute",
+    bottom: rt.insets.bottom + theme.space(10),
+    left: 0,
+    right: 0,
+    alignItems: "center",
   },
 }));
