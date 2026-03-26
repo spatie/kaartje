@@ -6,6 +6,9 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "scripts": {
+    "generate-mask": "npx tsx scripts/generate-land-mask.ts"
+  },
   "devDependencies": {
     "@types/react": "~19.2.2",
     "@types/three": "^0.183.1",
@@ -16,6 +19,8 @@
   "peerDependencies": {
     "@react-three/fiber": ">=9.0.0",
     "react": ">=19.0.0",
-    "three": ">=0.180.0"
+    "three": ">=0.180.0",
+    "tsx": "^4.19.0",
+    "typescript": "~5.9.2"
   }
 }
