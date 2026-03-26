@@ -13,7 +13,7 @@
     "fmt:check": "oxfmt --check ."
   },
   "devDependencies": {
-    "oxlint": "latest",
-    "oxfmt": "latest"
+    "oxfmt": "latest",
+    "oxlint": "latest"
   }
 }

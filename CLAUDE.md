@@ -60,15 +60,15 @@ npm run ios --workspace=@kaartje/mobile
 
 A dark, minimal palette inspired by postcards. Warm paper tones on deep backgrounds, with stamp reds, postmark golds, and airmail blues as accents.
 
-| Token | Hex | Role |
-|-------|-----|------|
-| Night | `#0a0a0c` | Background |
-| Surface | `#141418` | Cards, sections |
-| Elevated | `#1e1e24` | Raised elements |
-| Ink | `#ede6db` | Primary text |
-| Ink Faded | `#9b9489` | Secondary text |
-| Stamp | `#c45a3c` | Primary accent |
-| Postmark | `#a08c6a` | Secondary accent |
-| Airmail | `#4a7fb5` | Tertiary accent |
+| Token     | Hex       | Role             |
+| --------- | --------- | ---------------- |
+| Night     | `#0a0a0c` | Background       |
+| Surface   | `#141418` | Cards, sections  |
+| Elevated  | `#1e1e24` | Raised elements  |
+| Ink       | `#ede6db` | Primary text     |
+| Ink Faded | `#9b9489` | Secondary text   |
+| Stamp     | `#c45a3c` | Primary accent   |
+| Postmark  | `#a08c6a` | Secondary accent |
+| Airmail   | `#4a7fb5` | Tertiary accent  |
 
 Typography: **DM Serif Display** for headings, **DM Sans** for body text. Tokens are defined in Tailwind's `@theme` (web) and react-native-unistyles (mobile), kept in sync across both platforms.

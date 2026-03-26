@@ -15,8 +15,9 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       backgroundColor: "#ffffff",
     },
     ios: {
-      supportsTablet: true,
+      supportsTablet: false,
       bundleIdentifier: "be.spatie.kaartje",
+      appleTeamId: "97KRXCRMAY",
     },
     android: {
       package: "be.spatie.kaartje",

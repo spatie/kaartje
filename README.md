@@ -22,11 +22,11 @@ A Bun server that acts as the bridge. It stores postcard data, serves it to the 
 
 ## Tech stack
 
-| Package | Tech | Purpose |
-|---------|------|---------|
-| `@kaartje/api` | Bun, TypeScript | HTTP server + WebSockets |
-| `@kaartje/web` | Astro 6, Tailwind v4, Three.js | 3D globe + postcard viewer |
-| `@kaartje/mobile` | Expo 55, React Native 0.83, Reanimated | Postcard scanner + sender |
+| Package           | Tech                                   | Purpose                    |
+| ----------------- | -------------------------------------- | -------------------------- |
+| `@kaartje/api`    | Bun, TypeScript                        | HTTP server + WebSockets   |
+| `@kaartje/web`    | Astro 6, Tailwind v4, Three.js         | 3D globe + postcard viewer |
+| `@kaartje/mobile` | Expo 55, React Native 0.83, Reanimated | Postcard scanner + sender  |
 
 ### Monorepo
 

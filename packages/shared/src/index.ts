@@ -1,2 +1,2 @@
-export { DottedGlobe } from './DottedGlobe'
-export type { DottedGlobeProps } from './DottedGlobe'
+export { DottedGlobe } from "./DottedGlobe";
+export type { DottedGlobeProps } from "./DottedGlobe";

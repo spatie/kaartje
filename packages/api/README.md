@@ -20,10 +20,10 @@ Copy `.env.example` to `.env` to customize settings. The defaults work out of th
 
 ## Services (Docker Compose)
 
-| Service | Port | Purpose |
-|---------|------|---------|
-| MinIO | 9000 (API), 9001 (console) | S3-compatible file storage |
-| libSQL (sqld) | 8080 | Turso-compatible SQLite server |
+| Service       | Port                       | Purpose                        |
+| ------------- | -------------------------- | ------------------------------ |
+| MinIO         | 9000 (API), 9001 (console) | S3-compatible file storage     |
+| libSQL (sqld) | 8080                       | Turso-compatible SQLite server |
 
 MinIO console is available at `http://localhost:9001` (login: `minioadmin` / `minioadmin`).
 
@@ -131,16 +131,16 @@ npm run db:studio --workspace=@kaartje/api     # Open Drizzle Studio (DB browser
 
 ## Environment variables
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PORT` | `3000` | Server port |
-| `TURSO_DATABASE_URL` | `http://127.0.0.1:8080` | libSQL / Turso database URL |
-| `TURSO_AUTH_TOKEN` | (empty) | Auth token (empty for local, required for Turso cloud) |
-| `S3_ENDPOINT` | `http://localhost:9000` | S3-compatible storage endpoint |
-| `S3_REGION` | `us-east-1` | S3 region |
-| `S3_BUCKET` | `kaartje-postcards` | Bucket name |
-| `S3_ACCESS_KEY_ID` | `minioadmin` | S3 access key |
-| `S3_SECRET_ACCESS_KEY` | `minioadmin` | S3 secret key |
+| Variable               | Default                 | Description                                            |
+| ---------------------- | ----------------------- | ------------------------------------------------------ |
+| `PORT`                 | `3000`                  | Server port                                            |
+| `TURSO_DATABASE_URL`   | `http://127.0.0.1:8080` | libSQL / Turso database URL                            |
+| `TURSO_AUTH_TOKEN`     | (empty)                 | Auth token (empty for local, required for Turso cloud) |
+| `S3_ENDPOINT`          | `http://localhost:9000` | S3-compatible storage endpoint                         |
+| `S3_REGION`            | `us-east-1`             | S3 region                                              |
+| `S3_BUCKET`            | `kaartje-postcards`     | Bucket name                                            |
+| `S3_ACCESS_KEY_ID`     | `minioadmin`            | S3 access key                                          |
+| `S3_SECRET_ACCESS_KEY` | `minioadmin`            | S3 secret key                                          |
 
 ## File structure
 
