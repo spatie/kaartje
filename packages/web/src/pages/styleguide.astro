@@ -1,0 +1,509 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="Kaartje — Styleguide">
+  <div class="max-w-4xl mx-auto px-6 py-8">
+
+    <!-- Header -->
+    <header class="pt-16 pb-12 border-b border-border mb-12">
+      <p class="font-mono text-sm text-stamp tracking-wider uppercase mb-3">Design System</p>
+      <h1 class="font-serif text-6xl tracking-tighter text-ink mb-4">Kaartje</h1>
+      <p class="text-lg text-ink-faded max-w-xl leading-relaxed">
+        A dark, minimal design language inspired by postcards —
+        warm paper tones, stamp reds, and postmark golds.
+      </p>
+    </header>
+
+    <!-- Colors -->
+    <section class="mb-16">
+      <h2 class="font-serif text-4xl tracking-tighter mb-3">Colors</h2>
+      <p class="text-ink-faded mb-8 leading-relaxed">Built around the postcard metaphor. Warm ink on deep night backgrounds, with stamp and postmark accents.</p>
+
+      <h3 class="font-sans text-sm font-semibold text-ink-light tracking-wider uppercase mt-8 mb-4">Backgrounds</h3>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div class="flex flex-col gap-2">
+          <div class="w-full aspect-[1.2] rounded-md bg-night border border-border"></div>
+          <span class="text-sm font-medium text-ink">Night</span>
+          <code class="text-xs text-postmark bg-elevated px-1.5 py-0.5 rounded-sm w-fit">#0a0a0c</code>
+        </div>
+        <div class="flex flex-col gap-2">
+          <div class="w-full aspect-[1.2] rounded-md bg-surface"></div>
+          <span class="text-sm font-medium text-ink">Surface</span>
+          <code class="text-xs text-postmark bg-elevated px-1.5 py-0.5 rounded-sm w-fit">#141418</code>
+        </div>
+        <div class="flex flex-col gap-2">
+          <div class="w-full aspect-[1.2] rounded-md bg-elevated"></div>
+          <span class="text-sm font-medium text-ink">Elevated</span>
+          <code class="text-xs text-postmark bg-elevated px-1.5 py-0.5 rounded-sm w-fit">#1e1e24</code>
+        </div>
+        <div class="flex flex-col gap-2">
+          <div class="w-full aspect-[1.2] rounded-md bg-border"></div>
+          <span class="text-sm font-medium text-ink">Border</span>
+          <code class="text-xs text-postmark bg-elevated px-1.5 py-0.5 rounded-sm w-fit">#2a2a32</code>
+        </div>
+      </div>
+
+      <h3 class="font-sans text-sm font-semibold text-ink-light tracking-wider uppercase mt-8 mb-4">Ink</h3>
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div class="flex flex-col gap-2">
+          <div class="w-full aspect-[1.2] rounded-md bg-ink"></div>
+          <span class="text-sm font-medium text-ink">Ink</span>
+          <code class="text-xs text-postmark bg-elevated px-1.5 py-0.5 rounded-sm w-fit">#ede6db</code>
+        </div>
+        <div class="flex flex-col gap-2">
+          <div class="w-full aspect-[1.2] rounded-md bg-ink-faded"></div>
+          <span class="text-sm font-medium text-ink">Ink Faded</span>
+          <code class="text-xs text-postmark bg-elevated px-1.5 py-0.5 rounded-sm w-fit">#9b9489</code>
+        </div>
+        <div class="flex flex-col gap-2">
+          <div class="w-full aspect-[1.2] rounded-md bg-ink-light"></div>
+          <span class="text-sm font-medium text-ink">Ink Light</span>
+          <code class="text-xs text-postmark bg-elevated px-1.5 py-0.5 rounded-sm w-fit">#6b655c</code>
+        </div>
+      </div>
+
+      <h3 class="font-sans text-sm font-semibold text-ink-light tracking-wider uppercase mt-8 mb-4">Accents</h3>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div class="flex flex-col gap-2">
+          <div class="w-full aspect-[1.2] rounded-md bg-stamp"></div>
+          <span class="text-sm font-medium text-ink">Stamp</span>
+          <code class="text-xs text-postmark bg-elevated px-1.5 py-0.5 rounded-sm w-fit">#c45a3c</code>
+        </div>
+        <div class="flex flex-col gap-2">
+          <div class="w-full aspect-[1.2] rounded-md bg-stamp-hover"></div>
+          <span class="text-sm font-medium text-ink">Stamp Hover</span>
+          <code class="text-xs text-postmark bg-elevated px-1.5 py-0.5 rounded-sm w-fit">#d4785e</code>
+        </div>
+        <div class="flex flex-col gap-2">
+          <div class="w-full aspect-[1.2] rounded-md bg-postmark"></div>
+          <span class="text-sm font-medium text-ink">Postmark</span>
+          <code class="text-xs text-postmark bg-elevated px-1.5 py-0.5 rounded-sm w-fit">#a08c6a</code>
+        </div>
+        <div class="flex flex-col gap-2">
+          <div class="w-full aspect-[1.2] rounded-md bg-airmail"></div>
+          <span class="text-sm font-medium text-ink">Airmail</span>
+          <code class="text-xs text-postmark bg-elevated px-1.5 py-0.5 rounded-sm w-fit">#4a7fb5</code>
+        </div>
+      </div>
+    </section>
+
+    <!-- Typography -->
+    <section class="mb-16">
+      <h2 class="font-serif text-4xl tracking-tighter mb-3">Typography</h2>
+      <p class="text-ink-faded mb-8 leading-relaxed">DM Serif Display for headings — classic and elegant. DM Sans for body — clean and modern. Together they bridge timeless correspondence and contemporary interface design.</p>
+
+      <div class="flex flex-col gap-4">
+        <div class="flex items-baseline gap-6 py-3 border-b border-border-subtle">
+          <span class="font-mono text-xs text-ink-light min-w-24 shrink-0">6xl / 60px</span>
+          <span class="font-serif text-6xl tracking-tighter text-ink truncate">Postcards</span>
+        </div>
+        <div class="flex items-baseline gap-6 py-3 border-b border-border-subtle">
+          <span class="font-mono text-xs text-ink-light min-w-24 shrink-0">5xl / 48px</span>
+          <span class="font-serif text-5xl tracking-tighter text-ink truncate">Postcards</span>
+        </div>
+        <div class="flex items-baseline gap-6 py-3 border-b border-border-subtle">
+          <span class="font-mono text-xs text-ink-light min-w-24 shrink-0">4xl / 36px</span>
+          <span class="font-serif text-4xl tracking-tighter text-ink truncate">Postcards</span>
+        </div>
+        <div class="flex items-baseline gap-6 py-3 border-b border-border-subtle">
+          <span class="font-mono text-xs text-ink-light min-w-24 shrink-0">3xl / 30px</span>
+          <span class="font-serif text-3xl tracking-tighter text-ink truncate">Postcards from around the world</span>
+        </div>
+        <div class="flex items-baseline gap-6 py-3 border-b border-border-subtle">
+          <span class="font-mono text-xs text-ink-light min-w-24 shrink-0">2xl / 24px</span>
+          <span class="font-serif text-2xl tracking-tighter text-ink truncate">Postcards from around the world</span>
+        </div>
+        <div class="flex items-baseline gap-6 py-3 border-b border-border-subtle">
+          <span class="font-mono text-xs text-ink-light min-w-24 shrink-0">xl / 20px</span>
+          <span class="text-xl text-ink truncate">The quick brown fox jumps over the lazy dog</span>
+        </div>
+        <div class="flex items-baseline gap-6 py-3 border-b border-border-subtle">
+          <span class="font-mono text-xs text-ink-light min-w-24 shrink-0">lg / 18px</span>
+          <span class="text-lg text-ink truncate">The quick brown fox jumps over the lazy dog</span>
+        </div>
+        <div class="flex items-baseline gap-6 py-3 border-b border-border-subtle">
+          <span class="font-mono text-xs text-ink-light min-w-24 shrink-0">base / 16px</span>
+          <span class="text-base text-ink truncate">The quick brown fox jumps over the lazy dog</span>
+        </div>
+        <div class="flex items-baseline gap-6 py-3 border-b border-border-subtle">
+          <span class="font-mono text-xs text-ink-light min-w-24 shrink-0">sm / 14px</span>
+          <span class="text-sm text-ink truncate">The quick brown fox jumps over the lazy dog</span>
+        </div>
+        <div class="flex items-baseline gap-6 py-3 border-b border-border-subtle">
+          <span class="font-mono text-xs text-ink-light min-w-24 shrink-0">xs / 12px</span>
+          <span class="text-xs text-ink truncate">The quick brown fox jumps over the lazy dog</span>
+        </div>
+      </div>
+
+      <h3 class="font-sans text-sm font-semibold text-ink-light tracking-wider uppercase mt-8 mb-4">Font Weights</h3>
+      <div class="flex flex-col gap-4">
+        <div class="flex items-baseline gap-6 py-3 border-b border-border-subtle">
+          <span class="font-mono text-xs text-ink-light min-w-24 shrink-0">400</span>
+          <span class="text-xl font-normal text-ink">Regular — body text, descriptions</span>
+        </div>
+        <div class="flex items-baseline gap-6 py-3 border-b border-border-subtle">
+          <span class="font-mono text-xs text-ink-light min-w-24 shrink-0">500</span>
+          <span class="text-xl font-medium text-ink">Medium — labels, navigation</span>
+        </div>
+        <div class="flex items-baseline gap-6 py-3 border-b border-border-subtle">
+          <span class="font-mono text-xs text-ink-light min-w-24 shrink-0">600</span>
+          <span class="text-xl font-semibold text-ink">Semibold — emphasis, buttons</span>
+        </div>
+        <div class="flex items-baseline gap-6 py-3 border-b border-border-subtle">
+          <span class="font-mono text-xs text-ink-light min-w-24 shrink-0">700</span>
+          <span class="text-xl font-bold text-ink">Bold — strong emphasis</span>
+        </div>
+      </div>
+
+      <h3 class="font-sans text-sm font-semibold text-ink-light tracking-wider uppercase mt-8 mb-4">Monospace</h3>
+      <div class="flex items-baseline gap-6 py-3 border-b border-border-subtle">
+        <span class="font-mono text-xs text-ink-light min-w-24 shrink-0">mono</span>
+        <span class="font-mono text-base text-ink">const postcard = await scan(camera)</span>
+      </div>
+    </section>
+
+    <!-- Spacing -->
+    <section class="mb-16">
+      <h2 class="font-serif text-4xl tracking-tighter mb-3">Spacing</h2>
+      <p class="text-ink-faded mb-8 leading-relaxed">Tailwind's default 4px base unit. Consistent rhythm across all elements.</p>
+
+      <div class="flex flex-col gap-3">
+        {[
+          { name: '1', px: '4px', width: 'w-1' },
+          { name: '2', px: '8px', width: 'w-2' },
+          { name: '3', px: '12px', width: 'w-3' },
+          { name: '4', px: '16px', width: 'w-4' },
+          { name: '6', px: '24px', width: 'w-6' },
+          { name: '8', px: '32px', width: 'w-8' },
+          { name: '12', px: '48px', width: 'w-12' },
+          { name: '16', px: '64px', width: 'w-16' },
+          { name: '24', px: '96px', width: 'w-24' },
+        ].map((s) => (
+          <div class="flex items-center gap-4">
+            <code class="text-xs text-postmark bg-elevated px-1.5 py-0.5 rounded-sm min-w-20 text-center">{s.name}</code>
+            <div class:list={['h-3 bg-stamp rounded-sm min-w-1', s.width]} />
+            <span class="font-mono text-xs text-ink-light">{s.px}</span>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- Components -->
+    <section class="mb-16">
+      <h2 class="font-serif text-4xl tracking-tighter mb-3">Components</h2>
+      <p class="text-ink-faded mb-8 leading-relaxed">Minimal building blocks. Every element should feel like it belongs on a postcard.</p>
+
+      <h3 class="font-sans text-sm font-semibold text-ink-light tracking-wider uppercase mt-8 mb-4">Buttons</h3>
+      <div class="flex items-center gap-3 flex-wrap mb-4">
+        <button class="inline-flex items-center justify-center text-sm font-medium leading-none px-5 py-3 rounded-md bg-stamp text-ink border border-stamp cursor-pointer transition-all duration-200 ease-out hover:bg-stamp-hover hover:border-stamp-hover hover:shadow-glow-stamp">
+          Send Postcard
+        </button>
+        <button class="inline-flex items-center justify-center text-sm font-medium leading-none px-5 py-3 rounded-md bg-transparent text-ink border border-border cursor-pointer transition-all duration-200 ease-out hover:border-ink-light hover:bg-elevated">
+          View Collection
+        </button>
+        <button class="inline-flex items-center justify-center text-sm font-medium leading-none px-5 py-3 rounded-md bg-transparent text-ink-faded border border-transparent cursor-pointer transition-all duration-200 ease-out hover:text-ink hover:bg-elevated">
+          Cancel
+        </button>
+      </div>
+
+      <div class="flex items-center gap-3 flex-wrap mb-4">
+        <button class="inline-flex items-center justify-center text-xs font-medium leading-none px-3 py-2 rounded-md bg-stamp text-ink border border-stamp cursor-pointer transition-all duration-200 ease-out hover:bg-stamp-hover">
+          Small
+        </button>
+        <button class="inline-flex items-center justify-center text-sm font-medium leading-none px-5 py-3 rounded-md bg-stamp text-ink border border-stamp cursor-pointer transition-all duration-200 ease-out hover:bg-stamp-hover">
+          Default
+        </button>
+        <button class="inline-flex items-center justify-center text-base font-medium leading-none px-8 py-4 rounded-md bg-stamp text-ink border border-stamp cursor-pointer transition-all duration-200 ease-out hover:bg-stamp-hover">
+          Large
+        </button>
+      </div>
+
+      <h3 class="font-sans text-sm font-semibold text-ink-light tracking-wider uppercase mt-8 mb-4">Cards</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-surface border border-border rounded-lg overflow-hidden transition-all duration-200 ease-out hover:border-ink-light hover:shadow-md hover:-translate-y-0.5">
+          <div class="h-36 bg-linear-to-br from-stamp to-[#8a3a24]"></div>
+          <div class="p-4">
+            <h4 class="font-serif text-2xl tracking-tighter mb-2">Amsterdam, NL</h4>
+            <p class="text-sm text-ink-faded mb-3">Greetings from the canals! Thank you for spatie/laravel-permission.</p>
+            <small class="text-xs text-ink-light">Received 3 days ago</small>
+          </div>
+        </div>
+        <div class="bg-surface border border-border rounded-lg overflow-hidden transition-all duration-200 ease-out hover:border-ink-light hover:shadow-md hover:-translate-y-0.5">
+          <div class="h-36 bg-linear-to-br from-airmail to-[#2d5a8a]"></div>
+          <div class="p-4">
+            <h4 class="font-serif text-2xl tracking-tighter mb-2">Tokyo, JP</h4>
+            <p class="text-sm text-ink-faded mb-3">Your media library package saved us weeks of work. Arigatou!</p>
+            <small class="text-xs text-ink-light">Received 1 week ago</small>
+          </div>
+        </div>
+        <div class="bg-surface border border-border rounded-lg overflow-hidden transition-all duration-200 ease-out hover:border-ink-light hover:shadow-md hover:-translate-y-0.5">
+          <div class="h-36 bg-linear-to-br from-postmark to-[#6b5a3a]"></div>
+          <div class="p-4">
+            <h4 class="font-serif text-2xl tracking-tighter mb-2">Cape Town, ZA</h4>
+            <p class="text-sm text-ink-faded mb-3">Sending sunshine and gratitude for all the open source work.</p>
+            <small class="text-xs text-ink-light">Received 2 weeks ago</small>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="font-sans text-sm font-semibold text-ink-light tracking-wider uppercase mt-8 mb-4">Badges</h3>
+      <div class="flex items-center gap-3 flex-wrap mb-4">
+        <span class="inline-flex items-center font-mono text-xs font-medium px-3 py-1 rounded-full bg-stamp/15 text-stamp-hover border border-stamp/30 tracking-wide">New</span>
+        <span class="inline-flex items-center font-mono text-xs font-medium px-3 py-1 rounded-full bg-postmark/15 text-postmark border border-postmark/30 tracking-wide">528 packages</span>
+        <span class="inline-flex items-center font-mono text-xs font-medium px-3 py-1 rounded-full bg-airmail/15 text-airmail border border-airmail/30 tracking-wide">In transit</span>
+        <span class="inline-flex items-center font-mono text-xs font-medium px-3 py-1 rounded-full bg-elevated text-ink-light border border-border tracking-wide">Archived</span>
+      </div>
+
+      <h3 class="font-sans text-sm font-semibold text-ink-light tracking-wider uppercase mt-8 mb-4">Input</h3>
+      <div class="flex flex-col max-w-sm mb-4">
+        <label class="text-sm font-medium text-ink-faded mb-2" for="demo-input">Sender</label>
+        <input
+          class="w-full font-sans text-base text-ink bg-surface border border-border rounded-md px-4 py-3 transition-all duration-150 ease-out placeholder:text-ink-light hover:border-ink-light focus:outline-none focus:border-stamp focus:ring-3 focus:ring-stamp/15"
+          id="demo-input"
+          type="text"
+          placeholder="Who sent this postcard?"
+        />
+      </div>
+
+      <h3 class="font-sans text-sm font-semibold text-ink-light tracking-wider uppercase mt-8 mb-4">Dividers</h3>
+      <hr class="border-none h-px bg-border my-6" />
+      <div class="h-0.5 my-6 bg-[repeating-linear-gradient(90deg,var(--color-stamp)_0%,var(--color-stamp)_33%,transparent_33%,transparent_36%,var(--color-stamp)_36%,var(--color-stamp)_66%,transparent_66%,transparent_69%,var(--color-stamp)_69%,var(--color-stamp)_100%)]"></div>
+    </section>
+
+    <!-- Postcard Element -->
+    <section class="mb-16">
+      <h2 class="font-serif text-4xl tracking-tighter mb-3">The Postcard</h2>
+      <p class="text-ink-faded mb-8 leading-relaxed">The core visual element. A warm, tactile card with stamp and postmark details.</p>
+
+      <div class="postcard">
+        <div class="postcard-front">
+          <div class="postcard-image"></div>
+        </div>
+        <div class="postcard-back">
+          <div class="postcard-stamp">
+            <div class="stamp-perforations">
+              <span class="stamp-value">KAARTJE</span>
+            </div>
+          </div>
+          <div class="postcard-postmark">
+            <div class="postmark-circle">
+              <span>ANTWERP</span>
+              <span>2026</span>
+            </div>
+          </div>
+          <div class="postcard-message">
+            <p class="postcard-greeting">Dear Spatie,</p>
+            <p class="postcard-text">Thank you for all the amazing open source packages. They've made our development process so much better.</p>
+            <p class="postcard-signature">— A grateful developer from Berlin</p>
+          </div>
+          <div class="postcard-divider-line"></div>
+          <div class="postcard-address">
+            <p>Spatie</p>
+            <p>Kruikstraat 22, Box 12</p>
+            <p>2018 Antwerp, Belgium</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Shadows & Effects -->
+    <section class="mb-16">
+      <h2 class="font-serif text-4xl tracking-tighter mb-3">Shadows & Effects</h2>
+      <p class="text-ink-faded mb-8 leading-relaxed">Subtle depth to lift elements off the night background.</p>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div class="bg-surface rounded-md p-6 flex items-center justify-center shadow-soft">
+          <code class="text-xs text-postmark bg-elevated px-1.5 py-0.5 rounded-sm">soft</code>
+        </div>
+        <div class="bg-surface rounded-md p-6 flex items-center justify-center shadow-md">
+          <code class="text-xs text-postmark bg-elevated px-1.5 py-0.5 rounded-sm">md</code>
+        </div>
+        <div class="bg-surface rounded-md p-6 flex items-center justify-center shadow-lg">
+          <code class="text-xs text-postmark bg-elevated px-1.5 py-0.5 rounded-sm">lg</code>
+        </div>
+        <div class="bg-surface rounded-md p-6 flex items-center justify-center shadow-xl">
+          <code class="text-xs text-postmark bg-elevated px-1.5 py-0.5 rounded-sm">xl</code>
+        </div>
+        <div class="bg-surface rounded-md p-6 flex items-center justify-center shadow-glow-stamp">
+          <code class="text-xs text-postmark bg-elevated px-1.5 py-0.5 rounded-sm">glow-stamp</code>
+        </div>
+        <div class="bg-surface rounded-md p-6 flex items-center justify-center shadow-glow-postmark">
+          <code class="text-xs text-postmark bg-elevated px-1.5 py-0.5 rounded-sm">glow-postmark</code>
+        </div>
+      </div>
+    </section>
+
+    <!-- Radii -->
+    <section class="mb-16">
+      <h2 class="font-serif text-4xl tracking-tighter mb-3">Border Radius</h2>
+      <p class="text-ink-faded mb-8 leading-relaxed">Gentle rounding. Nothing too sharp, nothing too soft.</p>
+
+      <div class="grid grid-cols-3 sm:grid-cols-5 gap-4">
+        <div class="w-24 h-24 bg-surface border border-border rounded-sm flex flex-col items-center justify-center gap-1">
+          <code class="text-xs text-postmark">sm</code>
+          <span class="text-xs text-ink-light">4px</span>
+        </div>
+        <div class="w-24 h-24 bg-surface border border-border rounded-md flex flex-col items-center justify-center gap-1">
+          <code class="text-xs text-postmark">md</code>
+          <span class="text-xs text-ink-light">8px</span>
+        </div>
+        <div class="w-24 h-24 bg-surface border border-border rounded-lg flex flex-col items-center justify-center gap-1">
+          <code class="text-xs text-postmark">lg</code>
+          <span class="text-xs text-ink-light">12px</span>
+        </div>
+        <div class="w-24 h-24 bg-surface border border-border rounded-xl flex flex-col items-center justify-center gap-1">
+          <code class="text-xs text-postmark">xl</code>
+          <span class="text-xs text-ink-light">16px</span>
+        </div>
+        <div class="w-20 h-20 bg-surface border border-border rounded-full flex flex-col items-center justify-center">
+          <code class="text-xs text-postmark">full</code>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-8 pb-16">
+      <hr class="border-none h-px bg-border mb-8" />
+      <p class="text-sm text-ink-faded text-center">Kaartje Design System — built for postcards from around the world.</p>
+    </footer>
+
+  </div>
+</Base>
+
+<style>
+  /* ——— Postcard (custom component, too complex for utility-only) ——— */
+  .postcard {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    max-width: 700px;
+    margin: 1.5rem 0;
+  }
+
+  .postcard-front,
+  .postcard-back {
+    aspect-ratio: 1.5;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .postcard-image {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #3a2820 0%, #5a3828 30%, #8a5538 60%, #c4783c 100%);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+  }
+
+  .postcard-back {
+    position: relative;
+    background: #f5f0e8;
+    padding: 1rem;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto 1fr auto;
+    gap: 0.5rem;
+  }
+
+  .postcard-stamp {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .stamp-perforations {
+    width: 48px;
+    height: 56px;
+    background: var(--color-stamp);
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+      -3px 0 0 -1.5px #f5f0e8, 3px 0 0 -1.5px #f5f0e8,
+      0 -3px 0 -1.5px #f5f0e8, 0 3px 0 -1.5px #f5f0e8,
+      -3px -3px 0 -1.5px #f5f0e8, 3px -3px 0 -1.5px #f5f0e8,
+      -3px 3px 0 -1.5px #f5f0e8, 3px 3px 0 -1.5px #f5f0e8;
+  }
+
+  .stamp-value {
+    font-family: var(--font-serif);
+    font-size: 7px;
+    color: #f5f0e8;
+    letter-spacing: 0.1em;
+  }
+
+  .postcard-postmark {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+    align-self: start;
+  }
+
+  .postmark-circle {
+    width: 52px;
+    height: 52px;
+    border: 2px solid rgba(0, 0, 0, 0.2);
+    border-radius: 9999px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transform: rotate(-15deg);
+  }
+
+  .postmark-circle span {
+    font-family: var(--font-mono);
+    font-size: 8px;
+    color: rgba(0, 0, 0, 0.25);
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .postcard-message {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    padding-right: 1rem;
+  }
+
+  .postcard-greeting,
+  .postcard-text,
+  .postcard-signature {
+    color: #2a2520;
+    font-size: 10px;
+    line-height: 1.6;
+  }
+
+  .postcard-greeting {
+    font-style: italic;
+    margin-bottom: 0.25rem;
+  }
+
+  .postcard-signature {
+    margin-top: 0.5rem;
+    font-style: italic;
+    color: #5a4a40;
+  }
+
+  .postcard-divider-line {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    height: 1px;
+    background: rgba(0, 0, 0, 0.1);
+    align-self: start;
+  }
+
+  .postcard-address {
+    grid-column: 2;
+    grid-row: 3;
+    text-align: right;
+  }
+
+  .postcard-address p {
+    font-size: 9px;
+    color: #2a2520;
+    line-height: 1.5;
+  }
+</style>

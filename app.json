@@ -1,0 +1,8 @@
+{
+  "android": {
+    "package": "com.anonymous.kaartje"
+  },
+  "ios": {
+    "bundleIdentifier": "com.anonymous.kaartje"
+  }
+}

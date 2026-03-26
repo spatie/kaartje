@@ -1,0 +1,61 @@
+{
+    "lsp": {
+        "oxlint": {
+            "initialization_options": {
+                "settings": {
+                    "configPath": "../.oxclintrc.json",
+                    "run": "onType",
+                    "fixKind": "safe_fix",
+                },
+            },
+        },
+        "oxfmt": {
+            "initialization_options": {
+                "settings": {
+                    "configPath": "../.oxcfmtrc.json",
+                    "run": "onSave",
+                },
+            },
+        },
+        "rust-analyzer": {
+            "initialization_options": {
+                "linkedProjects": ["api-rs/Cargo.toml"],
+                "check": {
+                    "command": "clippy",
+                },
+            },
+        },
+    },
+    "languages": {
+        "Rust": {
+            "formatter": "language_server",
+            "code_actions_on_format": {},
+        },
+        "TypeScript": {
+            "format_on_save": "on",
+            "prettier": {
+                "allowed": false,
+            },
+            "formatter": [
+                {
+                    "language_server": {
+                        "name": "oxfmt",
+                    },
+                },
+            ],
+        },
+        "TSX": {
+            "format_on_save": "on",
+            "prettier": {
+                "allowed": true,
+            },
+            "formatter": [
+                {
+                    "language_server": {
+                        "name": "oxfmt",
+                    },
+                },
+            ],
+        },
+    },
+}

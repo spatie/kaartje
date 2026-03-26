@@ -4,14 +4,15 @@
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web"
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "prebuild:clean": "expo prebuild --clean"
   },
   "dependencies": {
     "@react-three/fiber": "^9.5.0",
     "expo": "~55.0.8",
     "expo-constants": "^55.0.9",
+    "expo-dev-client": "^55.0.18",
     "expo-gl": "^55.0.10",
     "expo-linking": "^55.0.8",
     "expo-router": "^55.0.7",

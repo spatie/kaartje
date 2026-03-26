@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+/*
+ * Kaartje Design Tokens
+ *
+ * A dark, minimal palette inspired by postcards:
+ * warm paper tones, stamp reds, postmark golds,
+ * and airmail blues against deep night backgrounds.
+ */
+
+@theme {
+  /* ——— Colors ——— */
+
+  /* Backgrounds */
+  --color-night:        #0a0a0c;
+  --color-surface:      #141418;
+  --color-elevated:     #1e1e24;
+
+  /* Borders */
+  --color-border:        #2a2a32;
+  --color-border-subtle: #1e1e24;
+
+  /* Ink (text) */
+  --color-ink:           #ede6db;
+  --color-ink-faded:     #9b9489;
+  --color-ink-light:     #6b655c;
+
+  /* Accents */
+  --color-stamp:         #c45a3c;
+  --color-stamp-hover:   #d4785e;
+  --color-postmark:      #a08c6a;
+  --color-airmail:       #4a7fb5;
+
+  /* Semantic */
+  --color-success:       #5a9a6b;
+  --color-warning:       #c49a3c;
+  --color-error:         #c45a3c;
+
+  /* ——— Fonts ——— */
+  --font-serif:  'DM Serif Display', Georgia, 'Times New Roman', serif;
+  --font-sans:   'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono:   'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+
+  /* ——— Tracking ——— */
+  --tracking-tighter: -0.02em;
+  --tracking-wide:     0.04em;
+  --tracking-wider:    0.08em;
+
+  /* ——— Shadows ——— */
+  --shadow-soft:          0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md:            0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg:            0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-xl:            0 16px 48px rgba(0, 0, 0, 0.6);
+  --shadow-glow-stamp:    0 0 20px rgba(196, 90, 60, 0.3);
+  --shadow-glow-postmark: 0 0 20px rgba(160, 140, 106, 0.2);
+
+  /* ——— Radii ——— */
+  --radius-sm:   0.25rem;
+  --radius-md:   0.5rem;
+  --radius-lg:   0.75rem;
+  --radius-xl:   1rem;
+
+  /* ——— Easing ——— */
+  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* ——— Base ——— */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: rgba(196, 90, 60, 0.3);
+  color: var(--color-ink);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-ink-light);
+}
