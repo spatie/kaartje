@@ -86,12 +86,12 @@ function useGlTexture(gl: THREE.WebGLRenderer, uri: string) {
     glCtx.texParameteri(glCtx.TEXTURE_2D, glCtx.TEXTURE_MAG_FILTER, glCtx.LINEAR);
     glCtx.texParameteri(glCtx.TEXTURE_2D, glCtx.TEXTURE_WRAP_S, glCtx.CLAMP_TO_EDGE);
     glCtx.texParameteri(glCtx.TEXTURE_2D, glCtx.TEXTURE_WRAP_T, glCtx.CLAMP_TO_EDGE);
-    glCtx.endFrameEXP();
+    (glCtx as any).endFrameEXP?.();
 
     const tex = new THREE.Texture();
     tex.flipY = false;
     tex.needsUpdate = false;
-    const props = gl.properties.get(tex);
+    const props = gl.properties.get(tex) as Record<string, unknown>;
     props.__webglTexture = webglTex;
     props.__webglInit = true;
     setTexture(tex);

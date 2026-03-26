@@ -17,7 +17,7 @@ export default defineConfig({
     },
     resolve: {
       alias: {
-        "react-native": false,
+        "react-native": "/dev/null",
       },
     },
   },

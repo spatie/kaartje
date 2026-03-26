@@ -82,7 +82,16 @@ export async function createPostcard(req: Request): Promise<Response> {
 
   const [created] = await db.select().from(postcards).where(eq(postcards.id, id));
 
-  broadcast({ event: "card:scanned", data: { postcard: created } });
+  broadcast({
+    event: "card:scanned",
+    data: {
+      postcard: {
+        ...created,
+        frontImageUrl: getPublicUrl(created.frontImageKey),
+        backImageUrl: created.backImageKey ? getPublicUrl(created.backImageKey) : null,
+      },
+    },
+  });
 
   return Response.json(
     {

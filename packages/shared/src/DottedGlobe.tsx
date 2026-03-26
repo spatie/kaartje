@@ -1,11 +1,12 @@
-import { useRef, useMemo, useEffect, memo } from "react";
+import { useRef, useMemo, useEffect, useState, useCallback, memo } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { LAND_MASK_B64, MASK_W, MASK_H } from "./land-mask";
 import { DOT_STEP, DOTS_B64 } from "./land-dots";
 import { latLngToVec3 } from "./geo";
 import { ArcLayer } from "./ArcLayer";
-import type { ArcTarget } from "./types";
+import { PostcardFlightLayer, LandedCardStamp } from "./PostcardFlightLayer";
+import type { ArcTarget, LiveCard } from "./types";
 
 export interface DottedGlobeProps {
   /** Spacing between land dots in degrees (default: 1.1) */
@@ -26,6 +27,8 @@ export interface DottedGlobeProps {
   arcDelay?: number;
   /** Auto-rotation speed in rad/s (default: 0.1) */
   rotationSpeed?: number;
+  /** Live postcard cards to animate flying toward the globe */
+  liveCards?: LiveCard[];
 }
 
 // ---------------------------------------------------------------------------
@@ -188,7 +191,7 @@ const oceanSphereFragment = /* glsl */ `
 
   void main() {
     // Flip V (mask top-to-bottom, UVs bottom-to-top), mirror U, shift 0.5 to align with dot longitudes
-    float land = texture2D(uMask, vec2(fract(1.0 - vUv.x + 0.5), 1.0 - vUv.y)).r;
+    float land = texture2D(uMask, vec2(vUv.x, 1.0 - vUv.y)).r;
 
     // Water = blue, land = dark
     vec3 color = mix(uWaterColor, uLandColor, land);
@@ -257,13 +260,14 @@ const DotLayer = memo(function DotLayer({
   const { gl, size: viewportSize } = useThree();
   const materialRef = useRef<THREE.ShaderMaterial>(null!);
 
-  // Scale dots based on viewport width — smaller screens get smaller dots
+  // Scale dots to appear consistent across screen sizes
+  // Use the smaller dimension so dots fit both narrow and short screens
   const responsiveSize = useMemo(() => {
-    const baseWidth = 1200;
-    const width = viewportSize.width;
-    const scale = Math.max(0.4, Math.min(1.2, width / baseWidth));
+    const refSize = 900; // reference: dots tuned for ~900px smallest dimension
+    const smallest = Math.min(viewportSize.width, viewportSize.height);
+    const scale = Math.max(0.35, Math.min(1.2, smallest / refSize));
     return size * scale;
-  }, [size, viewportSize.width]);
+  }, [size, viewportSize.width, viewportSize.height]);
 
   const { geometry, uniforms } = useMemo(() => {
     const geo = new THREE.BufferGeometry();
@@ -312,52 +316,101 @@ export function DottedGlobe({
   dotStep = 1.1,
   radius = 2.5,
   dotColor = "#ede6db",
-  dotSize = 0.3,
+  dotSize = 0.22,
   waterColor = "#87c1c9",
   waterOpacity = 0.15,
   arcs,
   arcDelay = 0,
   rotationSpeed = 0.1,
+  liveCards = [],
 }: DottedGlobeProps = {}) {
   const arcData = arcs ?? MOCK_ARCS;
   const groupRef = useRef<THREE.Group>(null!);
 
+  // Landed cards state: stamps that stick to the rotating globe
+  const [landedCards, setLandedCards] = useState<
+    Array<{
+      id: string;
+      frontImageUrl: string;
+      latitude: number;
+      longitude: number;
+      landedAt: number;
+    }>
+  >([]);
+
+  const handleCardLanded = useCallback((card: LiveCard, clockTime: number) => {
+    setLandedCards((prev) => [
+      ...prev,
+      {
+        id: card.id,
+        frontImageUrl: card.frontImageUrl,
+        latitude: card.latitude,
+        longitude: card.longitude,
+        landedAt: clockTime,
+      },
+    ]);
+  }, []);
+
+  const handleStampExpired = useCallback((id: string) => {
+    setLandedCards((prev) => prev.filter((c) => c.id !== id));
+  }, []);
+
   const landData = useMemo(() => computeLandDots(dotStep, radius), [dotStep, radius]);
 
   // Set initial rotation so Belgium (lng ~4°) faces the camera
-  const initialRotation = useRef(-(4 - 40) * DEG);
+  const initialRotation = useRef((180 - 4 + 40) * DEG);
 
   useFrame((_, delta) => {
     groupRef.current.rotation.y += delta * rotationSpeed;
   });
 
   return (
-    <group rotation={[0, 0, -11.7 * DEG]}>
-      <group ref={groupRef} rotation={[0, initialRotation.current, 0]}>
-        <mesh>
-          <sphereGeometry args={[radius * 0.99, 64, 64]} />
-          <shaderMaterial
-            vertexShader={oceanSphereVertex}
-            fragmentShader={oceanSphereFragment}
-            uniforms={{
-              uMask: { value: MASK_TEXTURE },
-              uWaterColor: { value: new THREE.Color(waterColor) },
-              uLandColor: { value: new THREE.Color("#000000") },
-              uWaterOpacity: { value: waterOpacity },
-              uLandOpacity: { value: 0.4 },
-            }}
-            transparent
-            depthWrite={false}
+    <>
+      <group rotation={[0, 0, -11.7 * DEG]}>
+        <group ref={groupRef} rotation={[0, initialRotation.current, 0]}>
+          <mesh>
+            <sphereGeometry args={[radius * 0.99, 64, 64]} />
+            <shaderMaterial
+              vertexShader={oceanSphereVertex}
+              fragmentShader={oceanSphereFragment}
+              uniforms={{
+                uMask: { value: MASK_TEXTURE },
+                uWaterColor: { value: new THREE.Color(waterColor) },
+                uLandColor: { value: new THREE.Color("#000000") },
+                uWaterOpacity: { value: waterOpacity },
+                uLandOpacity: { value: 0.4 },
+              }}
+              transparent
+              depthWrite={false}
+            />
+          </mesh>
+          <DotLayer
+            positions={landData.positions}
+            scales={landData.scales}
+            color={dotColor}
+            size={dotSize}
           />
-        </mesh>
-        <DotLayer
-          positions={landData.positions}
-          scales={landData.scales}
-          color={dotColor}
-          size={dotSize}
-        />
-        {arcData.length > 0 && <ArcLayer arcs={arcData} radius={radius} delay={arcDelay} />}
+          {arcData.length > 0 && <ArcLayer arcs={arcData} radius={radius} delay={arcDelay} />}
+
+          {/* Landed card stamps — inside rotating group so they stick to the globe */}
+          {landedCards.map((card) => (
+            <LandedCardStamp
+              key={`landed-${card.id}`}
+              latitude={card.latitude}
+              longitude={card.longitude}
+              radius={radius}
+              frontImageUrl={card.frontImageUrl}
+              landedAt={card.landedAt}
+              onExpired={() => handleStampExpired(card.id)}
+            />
+          ))}
+        </group>
       </group>
-    </group>
+
+      {/* Flying cards — fully outside tilt group, in scene/world space */}
+      {liveCards.length > 0 && (
+        <PostcardFlightLayer cards={liveCards} radius={radius} onCardLanded={handleCardLanded} />
+      )}
+    </>
   );
 }

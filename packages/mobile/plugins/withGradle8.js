@@ -13,10 +13,7 @@ module.exports = function withGradle8(config) {
 
     if (fs.existsSync(wrapperPath)) {
       let content = fs.readFileSync(wrapperPath, "utf8");
-      content = content.replace(
-        /gradle-\d+\.\d+(\.\d+)?-bin\.zip/,
-        "gradle-8.13-bin.zip",
-      );
+      content = content.replace(/gradle-\d+\.\d+(\.\d+)?-bin\.zip/, "gradle-8.13-bin.zip");
       fs.writeFileSync(wrapperPath, content);
     }
 

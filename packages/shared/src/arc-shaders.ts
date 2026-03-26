@@ -10,7 +10,7 @@ export const arcVertex = /* glsl */ `
     vNormal = normalize(normalMatrix * normal);
     gl_Position = projectionMatrix * mvPos;
   }
-`
+`;
 
 export const arcFragment = /* glsl */ `
   precision highp float;
@@ -61,4 +61,4 @@ export const arcFragment = /* glsl */ `
 
     gl_FragColor = vec4(color, alpha);
   }
-`
+`;

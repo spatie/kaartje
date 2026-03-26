@@ -5,7 +5,7 @@ import {
   updatePostcardStatus,
 } from "./routes/postcards";
 import { handlePresign } from "./routes/uploads";
-import { websocket } from "./ws/handler";
+import { websocket, broadcast } from "./ws/handler";
 
 const port = Number(process.env.PORT) || 3000;
 
@@ -43,6 +43,39 @@ const server = Bun.serve({
       // Health check
       if (pathname === "/health" && method === "GET") {
         return Response.json({ status: "ok" });
+      }
+
+      // DEV ONLY: fake postcard broadcast with a public image URL
+      if (pathname === "/dev/fake-card" && method === "POST") {
+        const body = (await req.json()) as {
+          frontImageUrl?: string;
+          latitude?: number;
+          longitude?: number;
+          senderName?: string;
+          message?: string;
+          country?: string;
+        };
+        const id = crypto.randomUUID();
+        broadcast({
+          event: "card:scanned",
+          data: {
+            postcard: {
+              id,
+              message: body.message ?? null,
+              senderName: body.senderName ?? "Test",
+              country: body.country ?? null,
+              latitude: body.latitude ?? 48.8566,
+              longitude: body.longitude ?? 2.3522,
+              frontImageKey: "fake",
+              backImageKey: null,
+              frontImageUrl: body.frontImageUrl ?? "https://picsum.photos/400/267",
+              backImageUrl: null,
+              status: "scanned" as const,
+              createdAt: new Date().toISOString(),
+            },
+          },
+        });
+        return Response.json({ ok: true, id });
       }
 
       // POST /uploads/presign

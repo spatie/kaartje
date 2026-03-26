@@ -4,7 +4,10 @@ import type { Postcard } from "../db/schema";
 const clients = new Set<ServerWebSocket<unknown>>();
 
 export type WsEvent =
-  | { event: "card:scanned"; data: { postcard: Postcard } }
+  | {
+      event: "card:scanned";
+      data: { postcard: Postcard & { frontImageUrl: string; backImageUrl: string | null } };
+    }
   | { event: "card:arriving"; data: { postcardId: string } }
   | { event: "card:landed"; data: { postcardId: string } };
 

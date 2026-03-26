@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { AppState, Text, View } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AppState, Text, View, useWindowDimensions } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Canvas } from "@react-three/fiber";
 import { DottedGlobe } from "@kaartje/shared";
@@ -20,6 +20,29 @@ interface NetworkSphereViewProps {
 }
 
 export function NetworkSphereView({ onComplete }: NetworkSphereViewProps) {
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+
+  // Globe should appear the same physical size as on a 580x800 reference screen.
+  // Three.js fov is vertical, so camera Z controls vertical size.
+  // For horizontal: on narrow screens the globe overflows because the aspect
+  // ratio is smaller. We compute the required Z for both axes and take the larger.
+  const cameraZ = useMemo(() => {
+    const baseZ = 13;
+    const refWidth = 580;
+    const refHeight = 900;
+
+    // Z needed to match the reference vertical size
+    const zForHeight = baseZ * (refHeight / Math.max(screenHeight, 1));
+
+    // Z needed to match the reference horizontal size
+    // horizontal visible width ∝ aspect * tan(fov/2) * Z
+    // so Z_w / Z_ref = (refAspect / aspect) when aspect < refAspect
+    const refAspect = refWidth / refHeight;
+    const aspect = screenWidth / Math.max(screenHeight, 1);
+    const zForWidth = aspect < refAspect ? baseZ * (refAspect / aspect) : baseZ;
+
+    return Math.max(zForHeight, zForWidth);
+  }, [screenWidth, screenHeight]);
   // Intro text
   const textOpacity = useSharedValue(0);
   const textScale = useSharedValue(0);
@@ -121,7 +144,7 @@ export function NetworkSphereView({ onComplete }: NetworkSphereViewProps) {
     <View style={styles.container}>
       <Animated.View style={[styles.globe, globeStyle]}>
         <Canvas
-          camera={{ position: [0, 0, 9], fov: 45 }}
+          camera={{ position: [0, 0, cameraZ], fov: 45 }}
           frameloop={frameloop}
           onCreated={handleCanvasCreated}
         >
