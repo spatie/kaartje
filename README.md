@@ -1,6 +1,6 @@
 # kaartje
 
-Kaartje is a postcardware showcase app built by [Spatie](https://spatie.be). All of Spatie's open source packages are free to use, with a friendly request: send us a postcard from your hometown. Over the years we've received hundreds of postcards from developers around the world. Kaartje brings those postcards to life.
+kaartje is a postcardware showcase app built by [Spatie](https://spatie.be). All of Spatie's open source packages are free to use, with a friendly request: send us a postcard from your hometown. Over the years we've received hundreds of postcards from developers around the world. Kaartje brings those postcards to life.
 
 ## What it does
 
