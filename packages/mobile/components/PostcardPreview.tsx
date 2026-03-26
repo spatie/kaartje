@@ -3,7 +3,6 @@ import { Dimensions, Text, View } from "react-native";
 import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { Accelerometer } from "expo-sensors";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -21,7 +20,6 @@ const SCREEN_HEIGHT = Dimensions.get("window").height;
 const CARD_WIDTH = 2.4;
 const CARD_HEIGHT = 1.6;
 const CARD_DEPTH = 0.02;
-const TILT_MAX = 0.15;
 const LERP_SPEED = 0.12;
 const FLY_LERP_SPEED = 0.08;
 const FLICK_VELOCITY_THRESHOLD = 800;
@@ -52,8 +50,6 @@ interface SceneState {
   sending: boolean;
   sendTime: number;
   flyBack: boolean;
-  tiltX: number;
-  tiltY: number;
 }
 
 function createSceneState(): SceneState {
@@ -65,8 +61,6 @@ function createSceneState(): SceneState {
     sending: false,
     sendTime: 0,
     flyBack: false,
-    tiltX: 0,
-    tiltY: 0,
   };
 }
 
@@ -114,7 +108,6 @@ function PostcardMesh({
   const currentY = useRef(0);
   const currentRotY = useRef(0);
   const currentScale = useRef(1);
-  const smoothTilt = useRef({ x: 0, y: 0 });
 
   const edgeMaterial = useRef(new THREE.MeshBasicMaterial({ color: "#f0ebe3" }));
   const frontMaterial = useRef(new THREE.MeshBasicMaterial({ color: "#ffffff" }));
@@ -135,6 +128,7 @@ function PostcardMesh({
     if (scene.sending) {
       scene.sendTime += delta;
       g.position.y += FLY_OFF_SPEED * delta;
+      currentY.current = g.position.y;
       g.rotation.set(0, 0, 0);
       return;
     }
@@ -147,15 +141,12 @@ function PostcardMesh({
     currentRotY.current = lerp(currentRotY.current, scene.rotY, LERP_SPEED);
     currentScale.current = lerp(currentScale.current, 1, speed);
 
-    smoothTilt.current.x = lerp(smoothTilt.current.x, scene.tiltX, LERP_SPEED);
-    smoothTilt.current.y = lerp(smoothTilt.current.y, scene.tiltY, LERP_SPEED);
-
     const idleWeight = scene.isDragging || scene.isSending ? 0.2 : 1;
     const idleBob = Math.sin(t * 0.8) * 0.08 * idleWeight;
 
     g.position.set(0, currentY.current + idleBob, 0);
-    g.rotation.x = smoothTilt.current.x;
-    g.rotation.y = currentRotY.current + smoothTilt.current.y;
+    g.rotation.x = 0;
+    g.rotation.y = currentRotY.current;
     g.rotation.z = Math.sin(t * 0.5) * 0.015 * idleWeight;
     g.scale.setScalar(currentScale.current);
   });
@@ -178,19 +169,13 @@ export function PostcardPreview({ frontPhoto, onRetake, onSend }: PostcardPrevie
   const opacity = useSharedValue(0);
   const controlsOpacity = useSharedValue(1);
   const [sending, setSending] = useState(false);
+  const [error, setError] = useState(false);
+  const errorOpacity = useSharedValue(0);
+  const errorStyle = useAnimatedStyle(() => ({ opacity: errorOpacity.value }));
   const scene = useMemo(createSceneState, []);
   let baseRotY = 0;
   let resetTimer: ReturnType<typeof setTimeout> | null = null;
-
-  // Accelerometer — writes to plain scene object, not a ref
-  useEffect(() => {
-    Accelerometer.setUpdateInterval(60);
-    const sub = Accelerometer.addListener(({ x, y }) => {
-      scene.tiltX = y * TILT_MAX;
-      scene.tiltY = x * TILT_MAX;
-    });
-    return () => sub.remove();
-  }, [scene]);
+  let sendingTimer: ReturnType<typeof setTimeout> | null = null;
 
   useEffect(() => {
     opacity.value = withTiming(1, { duration: 400, easing: easeOut });
@@ -208,19 +193,24 @@ export function PostcardPreview({ frontPhoto, onRetake, onSend }: PostcardPrevie
     scene.isSending = true;
     scene.sending = true;
     scene.sendTime = 0;
+    setError(false);
+    errorOpacity.value = withTiming(0, { duration: 150, easing: easeOut });
     controlsOpacity.value = withTiming(0, { duration: 200, easing: easeOut });
 
     // Show loading state after card flies off screen (~300ms)
-    setTimeout(() => setSending(true), 300);
+    sendingTimer = setTimeout(() => setSending(true), 300);
 
     onSend().then((success) => {
       if (!success) {
+        if (sendingTimer) clearTimeout(sendingTimer);
         scene.sending = false;
         scene.sendTime = 0;
         scene.flyBack = true;
         scene.dragY = 0;
         setSending(false);
+        setError(true);
         controlsOpacity.value = withDelay(300, withTiming(1, { duration: 400, easing: easeOut }));
+        errorOpacity.value = withDelay(500, withTiming(1, { duration: 400, easing: easeOut }));
         setTimeout(() => {
           scene.flyBack = false;
           scene.isSending = false;
@@ -300,6 +290,15 @@ export function PostcardPreview({ frontPhoto, onRetake, onSend }: PostcardPrevie
             </GestureDetector>
           </Animated.View>
 
+          {error && (
+            <Animated.View style={[styles.errorContainer, errorStyle]}>
+              <Text style={styles.errorText}>Failed to send postcard</Text>
+              <Button size="sm" variant="primary" onPress={triggerSend}>
+                Try again
+              </Button>
+            </Animated.View>
+          )}
+
           <Animated.View
             style={[styles.controls, controlsStyle]}
             pointerEvents="box-none"
@@ -356,6 +355,28 @@ const styles = StyleSheet.create((theme, rt) => ({
     justifyContent: "center",
     gap: theme.space(3),
     paddingHorizontal: theme.space(8),
+  },
+  errorContainer: {
+    position: "absolute",
+    bottom: rt.insets.bottom + theme.space(24),
+    left: theme.space(6),
+    right: theme.space(6),
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.error,
+    borderRadius: theme.radius.lg,
+    padding: theme.space(4),
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: theme.space(3),
+    zIndex: 2,
+  },
+  errorText: {
+    fontFamily: theme.fonts.sansMedium,
+    fontSize: 14,
+    color: theme.colors.ink,
+    flex: 1,
   },
   sendingContainer: {
     flex: 1,

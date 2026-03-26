@@ -38,7 +38,7 @@ export default function PreviewScreen() {
       router.replace("/success");
       return true;
     } catch (e) {
-      console.error("Failed to send postcard:", e);
+      console.warn("Failed to send postcard:", e);
       return false;
     }
   };
