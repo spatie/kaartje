@@ -1,0 +1,19 @@
+{
+  "name": "kaartje",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev --workspace=@kaartje/api",
+    "dev:web": "npm run dev --workspace=@kaartje/web",
+    "dev:mobile": "npm run start --workspace=@kaartje/mobile",
+    "lint": "oxlint",
+    "fmt": "oxfmt --write .",
+    "fmt:check": "oxfmt --check ."
+  },
+  "devDependencies": {
+    "oxlint": "latest",
+    "oxfmt": "latest"
+  }
+}

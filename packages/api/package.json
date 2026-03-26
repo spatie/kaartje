@@ -1,0 +1,9 @@
+{
+  "name": "@kaartje/api",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "start": "bun run src/index.ts"
+  }
+}
