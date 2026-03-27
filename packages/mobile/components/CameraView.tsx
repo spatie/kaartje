@@ -89,10 +89,9 @@ export function CameraView({ title, onDismiss, onPhotoTaken }: CameraViewProps) 
     const photo = await cameraRef.current.takePhoto({ flash });
 
     // VisionCamera reports raw sensor dimensions (always landscape).
-    // Correct to post-EXIF dimensions for downstream consumers.
+    // Swap to post-EXIF dimensions when the phone is held in portrait.
     const needsSwap =
-      photo.orientation === "landscape-left" ||
-      photo.orientation === "landscape-right";
+      photo.orientation === "portrait" || photo.orientation === "portrait-upside-down";
 
     onPhotoTaken({
       ...photo,

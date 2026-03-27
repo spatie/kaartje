@@ -5,7 +5,7 @@ const COUNTRY_COORDS: Record<string, { latitude: number; longitude: number }> = 
   Argentina: { latitude: -38.42, longitude: -63.62 },
   Australia: { latitude: -25.27, longitude: 133.78 },
   Austria: { latitude: 47.52, longitude: 14.55 },
-  Belgium: { latitude: 50.5, longitude: 4.47 },
+  Belgium: { latitude: 51.2194, longitude: 4.4025 },
   Brazil: { latitude: -14.24, longitude: -51.93 },
   Canada: { latitude: 56.13, longitude: -106.35 },
   Chile: { latitude: -35.68, longitude: -71.54 },

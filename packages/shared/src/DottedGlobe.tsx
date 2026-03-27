@@ -5,7 +5,8 @@ import { LAND_MASK_B64, MASK_W, MASK_H } from "./land-mask";
 import { DOT_STEP, DOTS_B64 } from "./land-dots";
 import { latLngToVec3 } from "./geo";
 import { ArcLayer } from "./ArcLayer";
-import { PostcardFlightLayer, LandedCardStamp } from "./PostcardFlightLayer";
+import { PostcardFlightLayer, LandedCardStamp, PersistentCardStamp } from "./PostcardFlightLayer";
+import type { StampHoverData } from "./PostcardFlightLayer";
 import type { ArcTarget, LiveCard } from "./types";
 
 export interface DottedGlobeProps {
@@ -29,6 +30,14 @@ export interface DottedGlobeProps {
   rotationSpeed?: number;
   /** Live postcard cards to animate flying toward the globe */
   liveCards?: LiveCard[];
+  /** Pre-existing postcards from the database — rendered as permanent stamps */
+  persistentCards?: LiveCard[];
+  /** Called on stamp hover (preview) */
+  onCardHover?: (data: StampHoverData | null) => void;
+  /** Called on stamp click (pin) */
+  onCardSelect?: (data: StampHoverData | null) => void;
+  /** Pause globe rotation (e.g. when a card is focused) */
+  paused?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -323,6 +332,10 @@ export function DottedGlobe({
   arcDelay = 0,
   rotationSpeed = 0.1,
   liveCards = [],
+  persistentCards = [],
+  onCardHover,
+  onCardSelect,
+  paused = false,
 }: DottedGlobeProps = {}) {
   const arcData = arcs ?? MOCK_ARCS;
   const groupRef = useRef<THREE.Group>(null!);
@@ -334,9 +347,44 @@ export function DottedGlobe({
       frontImageUrl: string;
       latitude: number;
       longitude: number;
+      senderName?: string;
+      message?: string;
+      country?: string;
       landedAt: number;
     }>
   >([]);
+
+  // Animate a small subset of persistent cards in via flight; the rest appear instantly
+  const MAX_ANIMATED = 5;
+  const [stagedFlights, setStagedFlights] = useState<LiveCard[]>([]);
+  const [animatingIds, setAnimatingIds] = useState<Set<string>>(new Set());
+  const stagedIdsRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    const newCards = persistentCards.filter((c) => !stagedIdsRef.current.has(c.id));
+    if (newCards.length === 0) return;
+
+    for (const c of newCards) stagedIdsRef.current.add(c.id);
+
+    // Pick a few to animate, the rest appear as stamps immediately
+    const toAnimate = newCards.slice(0, MAX_ANIMATED);
+    setAnimatingIds(new Set(toAnimate.map((c) => c.id)));
+
+    toAnimate.forEach((card, i) => {
+      setTimeout(() => {
+        setStagedFlights((prev) => [...prev, card]);
+      }, i * 1200);
+    });
+  }, [persistentCards]);
+
+  const handlePersistentLanded = useCallback((_card: LiveCard) => {
+    setAnimatingIds((prev) => {
+      const next = new Set(prev);
+      next.delete(_card.id);
+      return next;
+    });
+    setStagedFlights((prev) => prev.filter((c) => c.id !== _card.id));
+  }, []);
 
   const handleCardLanded = useCallback((card: LiveCard, clockTime: number) => {
     setLandedCards((prev) => [
@@ -346,6 +394,9 @@ export function DottedGlobe({
         frontImageUrl: card.frontImageUrl,
         latitude: card.latitude,
         longitude: card.longitude,
+        senderName: card.senderName,
+        message: card.message,
+        country: card.country,
         landedAt: clockTime,
       },
     ]);
@@ -361,14 +412,14 @@ export function DottedGlobe({
   const initialRotation = useRef((180 - 4 + 40) * DEG);
 
   useFrame((_, delta) => {
-    groupRef.current.rotation.y += delta * rotationSpeed;
+    if (!paused) groupRef.current.rotation.y += delta * rotationSpeed;
   });
 
   return (
     <>
       <group rotation={[0, 0, -11.7 * DEG]}>
         <group ref={groupRef} rotation={[0, initialRotation.current, 0]}>
-          <mesh>
+          <mesh raycast={() => null}>
             <sphereGeometry args={[radius * 0.99, 64, 64]} />
             <shaderMaterial
               vertexShader={oceanSphereVertex}
@@ -396,20 +447,38 @@ export function DottedGlobe({
           {landedCards.map((card) => (
             <LandedCardStamp
               key={`landed-${card.id}`}
-              latitude={card.latitude}
-              longitude={card.longitude}
+              card={card}
               radius={radius}
-              frontImageUrl={card.frontImageUrl}
               landedAt={card.landedAt}
               onExpired={() => handleStampExpired(card.id)}
+              onHover={onCardHover}
+              onSelect={onCardSelect}
             />
           ))}
+
+          {/* Persistent stamps — shown immediately except cards still in flight */}
+          {persistentCards
+            .filter((c) => !animatingIds.has(c.id))
+            .map((card) => (
+              <PersistentCardStamp
+                key={`persistent-${card.id}`}
+                card={card}
+                radius={radius}
+                onHover={onCardHover}
+              onSelect={onCardSelect}
+              />
+            ))}
         </group>
       </group>
 
       {/* Flying cards — fully outside tilt group, in scene/world space */}
       {liveCards.length > 0 && (
         <PostcardFlightLayer cards={liveCards} radius={radius} onCardLanded={handleCardLanded} />
+      )}
+
+      {/* Persistent cards animating in via flight */}
+      {stagedFlights.length > 0 && (
+        <PostcardFlightLayer cards={stagedFlights} radius={radius} onCardLanded={handlePersistentLanded} />
       )}
     </>
   );

@@ -3,6 +3,7 @@ import {
   getPostcard,
   createPostcard,
   updatePostcardStatus,
+  deletePostcard,
 } from "./routes/postcards";
 import { handlePresign } from "./routes/uploads";
 import { websocket, broadcast } from "./ws/handler";
@@ -29,7 +30,7 @@ const server = Bun.serve({
     // CORS headers for all responses
     const corsHeaders = {
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, PATCH, OPTIONS",
+      "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
     };
 
@@ -64,8 +65,8 @@ const server = Bun.serve({
               message: body.message ?? null,
               senderName: body.senderName ?? "Test",
               country: body.country ?? null,
-              latitude: body.latitude ?? 48.8566,
-              longitude: body.longitude ?? 2.3522,
+              latitude: body.latitude ?? 51.2194,
+              longitude: body.longitude ?? 4.4025,
               frontImageKey: "fake",
               backImageKey: null,
               frontImageUrl: body.frontImageUrl ?? "https://picsum.photos/400/267",
@@ -97,6 +98,11 @@ const server = Bun.serve({
       const getMatch = pathname.match(/^\/postcards\/([^/]+)$/);
       if (getMatch && method === "GET") {
         return getPostcard(getMatch[1]);
+      }
+
+      // DELETE /postcards/:id
+      if (getMatch && method === "DELETE") {
+        return deletePostcard(getMatch[1]);
       }
 
       // PATCH /postcards/:id/status

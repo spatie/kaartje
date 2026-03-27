@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import stampUrl from "./assets/spatie-stamp.png";
 
 const CARD_W = 600;
 const CARD_H = 400;
@@ -10,27 +9,29 @@ const TEXT_COLOR = "#3a3630";
 const FADED_COLOR = "#9b9489";
 const BG_COLOR = "#f5f0e8";
 
-// Spatie's details
 const SPATIE_LINES = ["Spatie", "Kruikstraat 22, Box 12", "2018 Antwerp", "Belgium"];
 
+// Load stamp image from public assets
 let stampImage: HTMLImageElement | null = null;
-const stampLoaded = new Promise<HTMLImageElement>((resolve) => {
+if (typeof document !== "undefined") {
   const img = new Image();
-  img.crossOrigin = "anonymous";
   img.onload = () => {
     stampImage = img;
-    resolve(img);
   };
-  img.onerror = () => resolve(img); // proceed without stamp if it fails
-  img.src = stampUrl;
-});
+  img.src = "/spatie-stamp.png";
+}
+
+function drawStamp(ctx: CanvasRenderingContext2D, x: number, y: number, size: number) {
+  if (stampImage && stampImage.complete && stampImage.naturalWidth > 0) {
+    ctx.drawImage(stampImage, x, y, size, size);
+  }
+}
 
 function drawAddressLines(ctx: CanvasRenderingContext2D, x: number, y: number, width: number) {
   ctx.strokeStyle = LINE_COLOR;
   ctx.lineWidth = 1;
-  const lineSpacing = 32;
   for (let i = 0; i < 4; i++) {
-    const ly = y + i * lineSpacing;
+    const ly = y + i * 32;
     ctx.beginPath();
     ctx.moveTo(x, ly);
     ctx.lineTo(x + width, ly);
@@ -42,7 +43,11 @@ export function createBackTexture(opts?: {
   senderName?: string;
   message?: string;
   country?: string;
-}): THREE.CanvasTexture {
+}): THREE.CanvasTexture | THREE.Texture {
+  if (typeof document === "undefined") {
+    return new THREE.Texture();
+  }
+
   const canvas = document.createElement("canvas");
   canvas.width = CARD_W;
   canvas.height = CARD_H;
@@ -72,24 +77,21 @@ export function createBackTexture(opts?: {
   const leftX = PAD;
   const leftW = HALF - PAD * 2;
 
-  // Message area
   if (opts?.message) {
     ctx.font = '15px "DM Sans", sans-serif';
     ctx.fillStyle = TEXT_COLOR;
     ctx.textAlign = "left";
 
-    // Word-wrap the message
     const words = opts.message.split(" ");
     let line = "";
     let ly = PAD + 30;
-    const maxWidth = leftW;
     for (const word of words) {
       const test = line + (line ? " " : "") + word;
-      if (ctx.measureText(test).width > maxWidth && line) {
+      if (ctx.measureText(test).width > leftW && line) {
         ctx.fillText(line, leftX, ly);
         line = word;
         ly += 22;
-        if (ly > CARD_H - 80) break; // don't overflow
+        if (ly > CARD_H - 80) break;
       } else {
         line = test;
       }
@@ -97,15 +99,13 @@ export function createBackTexture(opts?: {
     if (line) ctx.fillText(line, leftX, ly);
   }
 
-  // Sender name at bottom left
   if (opts?.senderName) {
     ctx.font = 'italic 14px "DM Sans", sans-serif';
     ctx.fillStyle = FADED_COLOR;
     ctx.textAlign = "left";
-    ctx.fillText(`— ${opts.senderName}`, leftX, CARD_H - PAD - 10);
+    ctx.fillText(`\u2014 ${opts.senderName}`, leftX, CARD_H - PAD - 10);
   }
 
-  // Country label
   if (opts?.country) {
     ctx.font = '12px "DM Sans", sans-serif';
     ctx.fillStyle = FADED_COLOR;
@@ -117,18 +117,22 @@ export function createBackTexture(opts?: {
   const rightX = HALF + PAD;
   const rightW = HALF - PAD * 2;
 
-  // Stamp in top-right corner
-  if (stampImage && stampImage.complete && stampImage.naturalWidth > 0) {
-    const stampSize = 100;
-    const sx = CARD_W - PAD - stampSize;
-    const sy = PAD;
-    ctx.drawImage(stampImage, sx, sy, stampSize, stampSize);
-  }
+  // Stamp in top-right
+  const stampSize = 100;
+  drawStamp(ctx, CARD_W - PAD - stampSize, PAD, stampSize);
 
-  // Address lines on right side
+  // "POSTCARDWARE" label
+  ctx.font = 'bold 10px "DM Sans", sans-serif';
+  ctx.fillStyle = FADED_COLOR;
+  ctx.textAlign = "left";
+  ctx.letterSpacing = "3px";
+  ctx.fillText("POSTCARDWARE", rightX, PAD + 20);
+  ctx.letterSpacing = "0px";
+
+  // Address lines
   drawAddressLines(ctx, rightX, CARD_H - PAD - 130, rightW);
 
-  // Spatie details on the address lines
+  // Spatie details on the lines
   ctx.font = '15px "DM Sans", sans-serif';
   ctx.fillStyle = TEXT_COLOR;
   ctx.textAlign = "left";
@@ -137,18 +141,7 @@ export function createBackTexture(opts?: {
     ctx.fillText(SPATIE_LINES[i], rightX + 2, startY + i * 32);
   }
 
-  // "POSTCARDWARE" label at top of right side
-  ctx.font = 'bold 10px "DM Sans", sans-serif';
-  ctx.fillStyle = FADED_COLOR;
-  ctx.textAlign = "left";
-  ctx.letterSpacing = "3px";
-  ctx.fillText("POSTCARDWARE", rightX, PAD + 20);
-  ctx.letterSpacing = "0px";
-
   const tex = new THREE.CanvasTexture(canvas);
   tex.needsUpdate = true;
   return tex;
 }
-
-// Pre-warm the stamp image load
-stampLoaded.catch(() => {});

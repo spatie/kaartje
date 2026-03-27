@@ -29,8 +29,8 @@ import { NetworkSphereView } from '../components/NetworkSphereView';
       </div>
     </div>
 
-    <!-- Globe (positioned lower) -->
-    <div id="globe-container" class="absolute inset-0 top-[15%]">
+    <!-- Globe (fullscreen behind text) -->
+    <div id="globe-container" class="absolute inset-0">
       <NetworkSphereView client:only="react" />
     </div>
   </main>
@@ -43,7 +43,7 @@ import { NetworkSphereView } from '../components/NetworkSphereView';
 
   /* Text slides up to top-center and shrinks */
   #center-text.relocated #text-inner {
-    transform: translateY(-40vh) scale(0.85);
+    transform: translateY(-35vh) scale(0.85);
     transform-origin: top center;
   }
 

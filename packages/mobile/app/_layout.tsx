@@ -18,26 +18,14 @@ export default function RootLayout() {
       >
         <Stack.Screen name="index" />
         <Stack.Screen name="permission" options={{ animation: "fade" }} />
-        <Stack.Screen
-          name="camera-front"
-          options={{ animation: "fade", gestureEnabled: false }}
-        />
-        <Stack.Screen
-          name="crop"
-          options={{ animation: "slide_from_right" }}
-        />
-        <Stack.Screen
-          name="details"
-          options={{ animation: "slide_from_right" }}
-        />
+        <Stack.Screen name="camera-front" options={{ animation: "fade", gestureEnabled: false }} />
+        <Stack.Screen name="crop" options={{ animation: "slide_from_right" }} />
+        <Stack.Screen name="details" options={{ animation: "slide_from_right" }} />
         <Stack.Screen
           name="preview"
           options={{ animation: "fade_from_bottom", animationDuration: 500 }}
         />
-        <Stack.Screen
-          name="success"
-          options={{ animation: "fade", gestureEnabled: false }}
-        />
+        <Stack.Screen name="success" options={{ animation: "fade", gestureEnabled: false }} />
       </Stack>
     </PostcardProvider>
   );

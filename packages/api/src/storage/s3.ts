@@ -34,6 +34,8 @@ export async function createPresignedDownloadUrl(key: string) {
 }
 
 export function getPublicUrl(key: string) {
+  // If the key is already an absolute URL, return it directly (e.g. seeded placeholder images)
+  if (key.startsWith("http://") || key.startsWith("https://")) return key;
   const endpoint = process.env.S3_ENDPOINT ?? "http://localhost:9000";
   return `${endpoint}/${bucket}/${key}`;
 }

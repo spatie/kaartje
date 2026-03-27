@@ -10,7 +10,7 @@ export default function SuccessScreenRoute() {
   return (
     <View style={styles.container}>
       <SuccessScreen
-        onComplete={() => {
+        onSendAnother={() => {
           reset();
           router.replace("/camera-front");
         }}

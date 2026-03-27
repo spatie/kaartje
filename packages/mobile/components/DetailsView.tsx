@@ -1,12 +1,5 @@
 import { useState } from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, View } from "react-native";
 import { ArrowLeft } from "lucide-react-native";
 import { StyleSheet } from "react-native-unistyles";
 import { Button } from "./Button";
@@ -14,7 +7,8 @@ import { IconButton } from "./IconButton";
 
 interface DetailsViewProps {
   onBack: () => void;
-  onContinue: (message: string, senderName: string) => void;
+  onContinue: (message: string, senderName: string, country: string) => void;
+  showLocationInput?: boolean;
 }
 
 const RECIPIENT = {
@@ -24,9 +18,10 @@ const RECIPIENT = {
   country: "Belgium",
 };
 
-export function DetailsView({ onBack, onContinue }: DetailsViewProps) {
+export function DetailsView({ onBack, onContinue, showLocationInput }: DetailsViewProps) {
   const [message, setMessage] = useState("");
   const [senderName, setSenderName] = useState("");
+  const [country, setCountry] = useState("");
 
   return (
     <KeyboardAvoidingView
@@ -54,17 +49,12 @@ export function DetailsView({ onBack, onContinue }: DetailsViewProps) {
         <View style={styles.card}>
           <View style={styles.cardLeft}>
             <Text
-              style={[
-                styles.cardMessage,
-                !message && styles.cardMessagePlaceholder,
-              ]}
+              style={[styles.cardMessage, !message && styles.cardMessagePlaceholder]}
               numberOfLines={6}
             >
               {message || "Your message here..."}
             </Text>
-            {senderName ? (
-              <Text style={styles.cardFrom}>From {senderName}</Text>
-            ) : null}
+            {senderName ? <Text style={styles.cardFrom}>From {senderName}</Text> : null}
           </View>
           <View style={styles.cardDivider} />
           <View style={styles.cardRight}>
@@ -100,10 +90,23 @@ export function DetailsView({ onBack, onContinue }: DetailsViewProps) {
             placeholder="Your name"
             placeholderTextColor="#6b655c"
           />
+
+          {showLocationInput && (
+            <>
+              <Text style={styles.label}>Where are you sending from?</Text>
+              <TextInput
+                style={styles.input}
+                value={country}
+                onChangeText={setCountry}
+                placeholder="Country (e.g. Belgium)"
+                placeholderTextColor="#6b655c"
+              />
+            </>
+          )}
         </View>
 
         <View style={styles.actions}>
-          <Button variant="primary" onPress={() => onContinue(message, senderName)}>
+          <Button variant="primary" onPress={() => onContinue(message, senderName, country)}>
             Continue
           </Button>
         </View>

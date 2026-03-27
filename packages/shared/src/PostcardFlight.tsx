@@ -1,14 +1,13 @@
 import { useRef, useMemo, useState, useEffect } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { postcardFlightVertex, postcardFlightFragment } from "./postcard-flight-shaders";
 import { latLngToVec3 } from "./geo";
 import { createBackTexture } from "./postcard-back";
 
-const DURATION = 10.0;
+const DURATION = 14.0;
 const CARD_ASPECT = 0.67;
-const NUM_ORBITS = 2.5;
-const START_SCALE = 1.0;
+const START_SCALE = 0.8;
 const END_SCALE = 0.06;
 
 // Fallback texture (web only — document is not available in React Native)
@@ -53,7 +52,17 @@ function useTextureSafe(url: string): THREE.Texture {
   return texture;
 }
 
+/** Seeded pseudo-random — deterministic per card ID */
+function hashSeed(id: string): number {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) {
+    h = ((h << 5) - h + id.charCodeAt(i)) | 0;
+  }
+  return (h & 0x7fffffff) / 0x7fffffff; // 0..1
+}
+
 interface PostcardFlightProps {
+  id: string;
   frontImageUrl: string;
   latitude: number;
   longitude: number;
@@ -65,6 +74,7 @@ interface PostcardFlightProps {
 }
 
 export function PostcardFlight({
+  id,
   frontImageUrl,
   latitude,
   longitude,
@@ -79,6 +89,8 @@ export function PostcardFlight({
   const startTime = useRef(-1);
   const landed = useRef(false);
 
+  const camera = useThree((s) => s.camera);
+
   const texture = useTextureSafe(frontImageUrl);
 
   const backTexture = useMemo(
@@ -86,16 +98,44 @@ export function PostcardFlight({
     [senderName, message, country],
   );
 
+  const seed = useMemo(() => hashSeed(id), [id]);
+
   const landingPos = useMemo(
     () => new THREE.Vector3(...latLngToVec3(latitude, longitude, radius)),
     [latitude, longitude, radius],
   );
 
+  // Start from camera position — card appears to fly "from the viewer"
+  const startPos = useMemo(() => {
+    return camera.position.clone();
+  }, []);
+
+  // Orbit waypoint: a point near the globe surface offset from the landing spot
+  // Seed varies the approach angle and height so cards spread vertically
+  const orbitPos = useMemo(() => {
+    const landDir = landingPos.clone().normalize();
+    // Rotate around Y by a seed-varied angle for horizontal spread
+    const offsetAngle = (0.3 + seed * 0.5) * Math.PI * 0.5;
+    const cos = Math.cos(offsetAngle);
+    const sin = Math.sin(offsetAngle);
+    // Vary Y offset: spread from -0.4 to +0.4 based on seed
+    const yOffset = (seed - 0.5) * 0.8;
+    const offsetDir = new THREE.Vector3(
+      landDir.x * cos + landDir.z * sin,
+      landDir.y + yOffset,
+      -landDir.x * sin + landDir.z * cos,
+    ).normalize();
+    return offsetDir.multiplyScalar(radius * 1.4);
+  }, [landingPos, radius, seed]);
+
   const uniforms = useRef({
     uProgress: { value: 0 },
     uTime: { value: 0 },
-    uPosition: { value: new THREE.Vector3() },
+    uStartPos: { value: startPos },
+    uOrbitPos: { value: orbitPos },
+    uLandPos: { value: landingPos },
     uScale: { value: START_SCALE },
+    uSeed: { value: seed },
     uFrontTexture: { value: texture },
     uBackTexture: { value: backTexture },
     uOpacity: { value: 1.0 },
@@ -119,31 +159,22 @@ export function PostcardFlight({
     const dt = elapsed - startTime.current;
     const p = Math.min(dt / DURATION, 1);
 
-    // Simple orbit: rotate around Y axis, spiral inward, descend
-    // Angle: 2.5 full orbits = 5π radians
-    const angle = p * NUM_ORBITS * Math.PI * 2;
-
-    // Distance from center: start at 6 (far, visible from camera at z=8), end at globe radius
-    const startDist = 6;
-    const endDist = radius; // 2.5
-    const dist = startDist + (endDist - startDist) * p;
-
-    // Height: start at y=2 (camera height), end at landing y
-    const startY = 2;
-    const endY = landingPos.y;
-    const y = startY + (endY - startY) * p;
-
-    // Position: orbit in XZ plane
-    const x = Math.sin(angle) * dist;
-    const z = Math.cos(angle) * dist;
-
-    // Scale: large → tiny
-    const scale = START_SCALE + (END_SCALE - START_SCALE) * p;
+    // Scale: large at start → shrink during approach → tiny at landing
+    const approachEnd = 0.25;
+    const floatScale = 0.3;
+    let scale: number;
+    if (p < approachEnd) {
+      // Shrink from full to float size during approach
+      scale = START_SCALE + (floatScale - START_SCALE) * (p / approachEnd);
+    } else {
+      // Shrink from float size to final stamp size
+      const t = (p - approachEnd) / (1 - approachEnd);
+      scale = floatScale + (END_SCALE - floatScale) * t;
+    }
 
     // Update shader uniforms
     uniforms.uProgress.value = p;
     uniforms.uTime.value = elapsed;
-    uniforms.uPosition.value.set(x, y, z);
     uniforms.uScale.value = scale;
 
     if (p >= 1.0 && !landed.current) {
@@ -154,14 +185,12 @@ export function PostcardFlight({
 
   return (
     <mesh ref={meshRef}>
-      <planeGeometry args={[1, CARD_ASPECT]} />
+      <planeGeometry args={[1, CARD_ASPECT, 8, 6]} />
       <shaderMaterial
         ref={materialRef}
         vertexShader={postcardFlightVertex}
         fragmentShader={postcardFlightFragment}
         uniforms={uniforms}
-        transparent
-        depthWrite={false}
         side={THREE.DoubleSide}
       />
     </mesh>

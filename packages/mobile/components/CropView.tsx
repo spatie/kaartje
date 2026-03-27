@@ -68,15 +68,18 @@ export function CropView({ photo, onDismiss, onCropped }: CropViewProps) {
   // Photo display size (fit to screen width at zoom 1)
   const displayH = screenWidth * (photo.height / photo.width);
 
-  // Minimum zoom so the photo always covers the frame
-  const minZoom = Math.max(1, vfWidth / screenWidth, vfHeight / displayH);
+  // Camera preview aspect-fills the screen, centered on screen center
+  const cameraFillZoom = Math.max(1, screenHeight / displayH);
 
-  // Position photo centered on the frame
-  const photoTop = frameCenterY - displayH / 2;
+  // Minimum zoom: at least camera-fill zoom, and always cover the viewfinder
+  const minZoom = Math.max(cameraFillZoom, vfWidth / screenWidth, vfHeight / displayH);
+
+  // Position photo centered on screen (matching camera preview centering)
+  const photoTop = screenHeight / 2 - displayH / 2;
 
   const cutoutPath = buildCutoutPath(screenWidth, screenHeight, vfTop, vfWidth, vfHeight);
 
-  // Gesture state
+  // Gesture state — photo starts centered on screen like camera preview
   const scale = useSharedValue(minZoom);
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
@@ -137,29 +140,37 @@ export function CropView({ photo, onDismiss, onCropped }: CropViewProps) {
     const tx = translateX.value;
     const ty = translateY.value;
 
-    // Pixels per screen point at current zoom
-    const ppp = photo.width / (screenWidth * s);
-
     // Frame position relative to photo's visual top-left
-    const relX = VIEWFINDER_PADDING - tx + screenWidth * (s - 1) / 2;
-    const relY = (s * displayH - vfHeight) / 2 - ty;
-
-    const cropX = Math.round(relX * ppp);
-    const cropY = Math.round(relY * ppp);
-    const cropW = Math.round(vfWidth * ppp);
-    const cropH = Math.round(vfHeight * ppp);
-
-    // Clamp to image bounds
-    const clampedX = Math.max(0, Math.min(cropX, photo.width - cropW));
-    const clampedY = Math.max(0, Math.min(cropY, photo.height - cropH));
-    const crop = {
-      originX: clampedX,
-      originY: clampedY,
-      width: Math.min(cropW, photo.width - clampedX),
-      height: Math.min(cropH, photo.height - clampedY),
-    };
+    // Photo is centered on screen; viewfinder is at vfTop (offset from screen center)
+    const relX = VIEWFINDER_PADDING - tx + (screenWidth * (s - 1)) / 2;
+    const photoVisualTop = (screenHeight / 2) - (displayH * s) / 2 - ty;
+    const relY = vfTop - photoVisualTop;
 
     const uri = `file://${photo.path}`;
+
+    // Get actual bitmap dimensions (may differ from photo.width/height due to EXIF rotation)
+    const bitmapSize = await new Promise<{ w: number; h: number }>((resolve) => {
+      Image.getSize(uri, (w, h) => resolve({ w, h }));
+    });
+
+    const bmpW = bitmapSize.w;
+    const bmpH = bitmapSize.h;
+
+    // Recalculate ppp using actual bitmap width
+    const actualPpp = bmpW / (screenWidth * s);
+
+    const cropX = Math.floor(relX * actualPpp);
+    const cropY = Math.floor(relY * actualPpp);
+    const cropW = Math.floor(vfWidth * actualPpp);
+    const cropH = Math.floor(vfHeight * actualPpp);
+
+    // Strict clamp — guarantee originX + width <= bitmap dimensions
+    const originX = Math.max(0, Math.min(cropX, bmpW - 1));
+    const originY = Math.max(0, Math.min(cropY, bmpH - 1));
+    const width = Math.max(1, Math.min(cropW, bmpW - originX));
+    const height = Math.max(1, Math.min(cropH, bmpH - originY));
+    const crop = { originX, originY, width, height };
+
     const ref = await ImageManipulator.manipulate(uri).crop(crop).renderAsync();
     const result = await ref.saveAsync({ format: SaveFormat.JPEG, compress: 0.9 });
     const croppedPath = result.uri.replace(/^file:\/\//, "");

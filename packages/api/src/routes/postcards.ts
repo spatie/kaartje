@@ -55,13 +55,17 @@ export async function createPostcard(req: Request): Promise<Response> {
     return Response.json({ error: "frontImageKey is required" }, { status: 400 });
   }
 
-  // Fall back to country-based coords if lat/lng not provided
+  // Fall back to country-based coords, then Antwerp as default
   let { latitude, longitude } = body;
   if (latitude == null || longitude == null) {
     const coords = body.country ? coordsForCountry(body.country) : null;
     if (coords) {
       latitude = coords.latitude;
       longitude = coords.longitude;
+    } else {
+      // Default to Spatie HQ in Antwerp
+      latitude = 51.2194;
+      longitude = 4.4025;
     }
   }
 
@@ -122,4 +126,15 @@ export async function updatePostcardStatus(id: string, req: Request): Promise<Re
   broadcast({ event, data: { postcardId: id } });
 
   return Response.json({ ...existing, status: body.status });
+}
+
+export async function deletePostcard(id: string): Promise<Response> {
+  const [existing] = await db.select().from(postcards).where(eq(postcards.id, id));
+
+  if (!existing) {
+    return Response.json({ error: "Postcard not found" }, { status: 404 });
+  }
+
+  await db.delete(postcards).where(eq(postcards.id, id));
+  return Response.json({ deleted: true });
 }

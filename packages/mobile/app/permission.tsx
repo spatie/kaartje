@@ -7,9 +7,7 @@ import { CameraPermission } from "../components/CameraPermission";
 export default function PermissionScreen() {
   return (
     <View style={styles.container}>
-      <CameraPermission
-        onPermissionGranted={() => router.replace("/camera-front")}
-      />
+      <CameraPermission onPermissionGranted={() => router.replace("/camera-front")} />
       <StatusBar style="light" />
     </View>
   );
