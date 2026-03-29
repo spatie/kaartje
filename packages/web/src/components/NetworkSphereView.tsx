@@ -58,11 +58,21 @@ export function NetworkSphereView() {
   // Single API client instance
   const client = useMemo(() => new ApiClient({ baseUrl: API_BASE_URL }), []);
 
-  // Fetch postcards in batches of 10 to avoid loading all textures at once
+  // Fetch postcards in batches, preload each image before adding to globe
   useEffect(() => {
     let cancelled = false;
     const BATCH_SIZE = 10;
-    const BATCH_DELAY = 600; // ms between batches
+    const BATCH_DELAY = 300; // ms between batches
+
+    function preloadImage(url: string): Promise<void> {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => resolve();
+        img.onerror = () => resolve(); // skip failed images, don't block
+        img.src = url;
+      });
+    }
 
     async function fetchBatches() {
       let cursor: string | null = null;
@@ -86,13 +96,17 @@ export function NetworkSphereView() {
             }));
 
           if (cards.length > 0) {
-            setPersistentCards((prev) => [...prev, ...cards]);
+            // Preload all images in this batch before adding cards to the globe
+            await Promise.all(cards.map((c) => preloadImage(c.frontImageUrl)));
+            if (!cancelled) {
+              setPersistentCards((prev) => [...prev, ...cards]);
+            }
           }
 
           if (!nextCursor) break;
           cursor = nextCursor;
 
-          // Wait between batches to let textures load
+          // Brief pause between batches
           await new Promise((r) => setTimeout(r, BATCH_DELAY));
         } catch (err) {
           console.warn("[API] Failed to fetch postcards:", err);
