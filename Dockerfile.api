@@ -4,8 +4,10 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 COPY packages/api/package.json packages/api/
 COPY packages/shared/package.json packages/shared/
+COPY packages/web/package.json packages/web/
+COPY packages/mobile/package.json packages/mobile/
 
-RUN npm ci --workspace=@kaartje/api --workspace=@kaartje/shared
+RUN npm ci
 
 FROM oven/bun:1
 WORKDIR /app
