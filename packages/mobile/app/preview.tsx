@@ -6,7 +6,8 @@ import { usePostcard } from "../contexts/PostcardContext";
 import { PostcardPreview } from "../components/PostcardPreview";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000";
-const api = new ApiClient({ baseUrl: API_BASE });
+const API_KEY = process.env.EXPO_PUBLIC_API_KEY ?? "";
+const api = new ApiClient({ baseUrl: API_BASE, apiKey: API_KEY || undefined });
 
 /** Upload image via the API — server converts to AVIF and stores in S3 */
 async function uploadImageRN(filePath: string): Promise<string> {

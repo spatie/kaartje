@@ -47,6 +47,19 @@ services:
       - default
       - coolify
 
+  # Restart Traefik after deploy so it picks up new container labels
+  proxy-reload:
+    image: docker:cli
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: sh -c "sleep 5 && docker restart coolify-proxy"
+    depends_on:
+      - api
+      - web
+    restart: "no"
+    networks:
+      - default
+
   libsql:
     image: ghcr.io/tursodatabase/libsql-server:latest
     volumes:
