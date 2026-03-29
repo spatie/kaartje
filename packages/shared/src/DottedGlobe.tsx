@@ -428,16 +428,15 @@ export const DottedGlobe = memo(function DottedGlobe({
     }>
   >([]);
 
-  // Animate a small subset of persistent cards in via flight; the rest are
-  // streamed into InstancedStamps in small batches to avoid a frame spike.
+  // Animate a small subset of persistent cards in via flight on first load only;
+  // subsequent batches go straight to stamps without flight animation.
   const MAX_ANIMATED = 5;
-  const BATCH_SIZE = 8; // cards added per batch tick
-  const BATCH_INTERVAL = 200; // ms between batches
 
   const [stagedFlights, setStagedFlights] = useState<LiveCard[]>([]);
   const [animatingIds, setAnimatingIds] = useState<Set<string>>(new Set());
   const [streamedCards, setStreamedCards] = useState<LiveCard[]>([]);
   const stagedIdsRef = useRef<Set<string>>(new Set());
+  const initialFlightsDone = useRef(false);
 
   useEffect(() => {
     // Prune stale IDs from previous persistentCards that are no longer present
@@ -455,35 +454,31 @@ export const DottedGlobe = memo(function DottedGlobe({
 
     for (const c of newCards) stagedIdsRef.current.add(c.id);
 
-    // Pick a few to animate via flight
-    const toAnimate = newCards.slice(0, MAX_ANIMATED);
-    const animIds = new Set(toAnimate.map((c) => c.id));
-    setAnimatingIds(animIds);
-
-    // Track all timers for cleanup
     const timers: ReturnType<typeof setTimeout>[] = [];
 
-    toAnimate.forEach((card, i) => {
-      timers.push(setTimeout(() => {
-        setStagedFlights((prev) => [...prev, card]);
-      }, i * 1200));
-    });
+    // Only animate flights for the very first batch
+    if (!initialFlightsDone.current) {
+      initialFlightsDone.current = true;
 
-    // Stream the remaining cards in batches to avoid a single-frame spike
-    const rest = newCards.filter((c) => !animIds.has(c.id));
-    let offset = 0;
+      const toAnimate = newCards.slice(0, MAX_ANIMATED);
+      const animIds = new Set(toAnimate.map((c) => c.id));
+      setAnimatingIds(animIds);
 
-    const pushBatch = () => {
-      const batch = rest.slice(offset, offset + BATCH_SIZE);
-      if (batch.length === 0) return;
-      offset += BATCH_SIZE;
-      setStreamedCards((prev) => [...prev, ...batch]);
-      if (offset < rest.length) {
-        timers.push(setTimeout(pushBatch, BATCH_INTERVAL));
+      toAnimate.forEach((card, i) => {
+        timers.push(setTimeout(() => {
+          setStagedFlights((prev) => [...prev, card]);
+        }, i * 1200));
+      });
+
+      // Rest of first batch goes straight to stamps
+      const rest = newCards.filter((c) => !animIds.has(c.id));
+      if (rest.length > 0) {
+        setStreamedCards((prev) => [...prev, ...rest]);
       }
-    };
-    // Start first batch after a short delay so the globe renders first
-    timers.push(setTimeout(pushBatch, 200));
+    } else {
+      // Subsequent batches: add directly to stamps, no flight animation
+      setStreamedCards((prev) => [...prev, ...newCards]);
+    }
 
     return () => timers.forEach(clearTimeout);
   }, [persistentCards]);
