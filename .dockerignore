@@ -1,0 +1,12 @@
+node_modules
+.git
+.expo
+android
+ios
+dist
+*.log
+.env
+.env.*
+.DS_Store
+packages/mobile
+docs
