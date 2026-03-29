@@ -11,6 +11,7 @@ import Animated, {
   Easing,
 } from "react-native-reanimated";
 import { StyleSheet } from "react-native-unistyles";
+import { theme } from "../unistyles";
 import { Button } from "./Button";
 
 const easeOut = Easing.bezier(0.2, 0.9, 0.1, 1);
@@ -136,7 +137,7 @@ export function NetworkSphereView({ onComplete }: NetworkSphereViewProps) {
       </Animated.View>
 
       <Animated.View style={[styles.fadeOverlay, fadeStyle]} pointerEvents="none">
-        <LinearGradient colors={["transparent", "#0a0a0c"]} style={styles.fade} />
+        <LinearGradient colors={["transparent", theme.colors.night]} style={styles.fade} />
         <View style={styles.fadeSolid} />
       </Animated.View>
 

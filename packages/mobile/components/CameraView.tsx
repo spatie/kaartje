@@ -10,6 +10,7 @@ import Animated, {
   Easing,
 } from "react-native-reanimated";
 import { StyleSheet } from "react-native-unistyles";
+import { theme } from "../unistyles";
 import { IconButton } from "./IconButton";
 
 const easeOut = Easing.bezier(0.2, 0.9, 0.1, 1);
@@ -157,7 +158,7 @@ export function CameraView({ title, onDismiss, onPhotoTaken }: CameraViewProps) 
         {/* Controls */}
         <View style={styles.controls}>
           <IconButton
-            icon={<X size={22} color="#ede6db" />}
+            icon={<X size={22} color={theme.colors.ink} />}
             variant="outline"
             size={48}
             onPress={onDismiss}
@@ -177,9 +178,9 @@ export function CameraView({ title, onDismiss, onPhotoTaken }: CameraViewProps) 
           <IconButton
             icon={
               flash === "off" ? (
-                <ZapOff size={22} color="#9b9489" />
+                <ZapOff size={22} color={theme.colors.inkFaded} />
               ) : (
-                <Zap size={22} color="#c49a3c" />
+                <Zap size={22} color={theme.colors.warning} />
               )
             }
             variant="ghost"
@@ -196,7 +197,7 @@ const styles = StyleSheet.create((theme, rt) => ({
   container: {
     position: "absolute",
     inset: 0,
-    backgroundColor: "#000",
+    backgroundColor: theme.colors.night,
   },
   camera: {
     position: "absolute",
@@ -286,7 +287,7 @@ const styles = StyleSheet.create((theme, rt) => ({
     height: 72,
     borderRadius: theme.radius.full,
     borderWidth: 4,
-    borderColor: "#ede6db",
+    borderColor: theme.colors.ink,
     alignItems: "center",
     justifyContent: "center",
     padding: 4,
@@ -295,6 +296,6 @@ const styles = StyleSheet.create((theme, rt) => ({
     flex: 1,
     alignSelf: "stretch",
     borderRadius: theme.radius.full,
-    backgroundColor: "#ede6db",
+    backgroundColor: theme.colors.ink,
   },
 }));

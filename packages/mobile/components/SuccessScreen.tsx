@@ -9,6 +9,7 @@ import Animated, {
   Easing,
 } from "react-native-reanimated";
 import { StyleSheet } from "react-native-unistyles";
+import { theme } from "../unistyles";
 import { Button } from "./Button";
 
 const easeOut = Easing.bezier(0.2, 0.9, 0.1, 1);
@@ -40,7 +41,7 @@ export function SuccessScreen({ onSendAnother }: SuccessScreenProps) {
   return (
     <Animated.View style={[styles.container, animatedStyle]}>
       <View style={styles.iconContainer}>
-        <Send size={48} strokeWidth={1.5} color="#c45a3c" />
+        <Send size={48} strokeWidth={1.5} color={theme.colors.stamp} />
       </View>
       <Text style={styles.title}>Thank you!</Text>
       <Text style={styles.subtitle}>Your postcard is on its way to Spatie.</Text>

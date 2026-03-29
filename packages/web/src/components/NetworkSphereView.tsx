@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import * as THREE from "three";
+import type { Group } from "three";
 import { DottedGlobe, FocusedCard } from "@kaartje/shared";
 import type { LiveCard, StampHoverData } from "@kaartje/shared";
 import { ApiClient } from "@kaartje/shared/api";
@@ -8,11 +8,11 @@ import type { WsEvent } from "@kaartje/shared/api";
 
 const API_BASE_URL = import.meta.env.PUBLIC_API_URL ?? "http://localhost:3000";
 
-const MIN_DELAY_MS = 2000;
+const MIN_DELAY_MS = 800;
 
 /** Animates the globe group from below into its resting position in 3D space */
 function GlobeReveal({ revealed, children }: { revealed: boolean; children: ReactNode }) {
-  const groupRef = useRef<THREE.Group>(null!);
+  const groupRef = useRef<Group>(null!);
   const currentY = useRef(-14); // start well below camera view
 
   useFrame(() => {
@@ -32,13 +32,16 @@ export function NetworkSphereView() {
   const [pinnedCard, setPinnedCard] = useState<StampHoverData | null>(null);
   const canvasReady = useRef(false);
   const timerReady = useRef(false);
+  const revealedRef = useRef(false);
   const mountTime = useRef(Date.now());
 
+  // Stable tryReveal — uses refs, never recreated
   const tryReveal = useCallback(() => {
-    if (canvasReady.current && timerReady.current && !revealed) {
+    if (canvasReady.current && timerReady.current && !revealedRef.current) {
+      revealedRef.current = true;
       requestAnimationFrame(() => setRevealed(true));
     }
-  }, [revealed]);
+  }, []);
 
   useEffect(() => {
     const remaining = MIN_DELAY_MS - (Date.now() - mountTime.current);
@@ -52,9 +55,11 @@ export function NetworkSphereView() {
     return () => clearTimeout(timer);
   }, [tryReveal]);
 
+  // Single API client instance
+  const client = useMemo(() => new ApiClient({ baseUrl: API_BASE_URL }), []);
+
   // Fetch all existing postcards from the database on mount
   useEffect(() => {
-    const client = new ApiClient({ baseUrl: API_BASE_URL });
     client
       .listPostcards()
       .then((postcards) => {
@@ -74,34 +79,41 @@ export function NetworkSphereView() {
       .catch((err) => {
         console.warn("[API] Failed to fetch postcards:", err);
       });
-  }, []);
+  }, [client]);
 
   // WebSocket connection for live postcard events
   useEffect(() => {
-    const client = new ApiClient({ baseUrl: API_BASE_URL });
     const connection = client.connectWebSocket({
       onEvent: (event: WsEvent) => {
         if (event.event === "card:scanned") {
           const { postcard } = event.data;
           if (postcard.latitude != null && postcard.longitude != null && postcard.frontImageUrl) {
-            setLiveCards((prev) => [
-              ...prev,
-              {
-                id: postcard.id,
-                frontImageUrl: postcard.frontImageUrl,
-                latitude: postcard.latitude as number,
-                longitude: postcard.longitude as number,
-                senderName: postcard.senderName ?? undefined,
-                message: postcard.message ?? undefined,
-                country: postcard.country ?? undefined,
-              },
-            ]);
+            setLiveCards((prev) => {
+              if (prev.length >= 50) return prev; // cap to prevent resource exhaustion
+              return [
+                ...prev,
+                {
+                  id: postcard.id,
+                  frontImageUrl: postcard.frontImageUrl,
+                  latitude: postcard.latitude as number,
+                  longitude: postcard.longitude as number,
+                  senderName: postcard.senderName ?? undefined,
+                  message: postcard.message ?? undefined,
+                  country: postcard.country ?? undefined,
+                },
+              ];
+            });
           }
         }
       },
     });
 
     return () => connection.close();
+  }, [client]);
+
+  // Remove live cards once they land to prevent unbounded growth
+  const handleCardLanded = useCallback((card: LiveCard, _clockTime: number) => {
+    setLiveCards((prev) => prev.filter((c) => c.id !== card.id));
   }, []);
 
   const handleCanvasCreated = useCallback(() => {
@@ -120,6 +132,7 @@ export function NetworkSphereView() {
               persistentCards={persistentCards}
               onCardHover={setHoveredCard}
               onCardSelect={setPinnedCard}
+              onCardLanded={handleCardLanded}
               paused={pinnedCard !== null}
             />
           </GlobeReveal>

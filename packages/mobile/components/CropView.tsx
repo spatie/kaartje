@@ -10,6 +10,7 @@ import Animated, {
   Easing,
 } from "react-native-reanimated";
 import { StyleSheet } from "react-native-unistyles";
+import { theme } from "../unistyles";
 import { IconButton } from "./IconButton";
 import type { Photo } from "../contexts/PostcardContext";
 
@@ -230,13 +231,13 @@ export function CropView({ photo, onDismiss, onCropped }: CropViewProps) {
       {/* Controls */}
       <Animated.View style={[styles.controls, fadeStyle]}>
         <IconButton
-          icon={<ArrowLeft size={22} color="#ede6db" />}
+          icon={<ArrowLeft size={22} color={theme.colors.ink} />}
           variant="outline"
           size={48}
           onPress={onDismiss}
         />
         <IconButton
-          icon={<Check size={22} color="#ede6db" />}
+          icon={<Check size={22} color={theme.colors.ink} />}
           variant="outline"
           size={48}
           onPress={handleConfirm}
@@ -250,7 +251,7 @@ const styles = StyleSheet.create((theme, rt) => ({
   container: {
     position: "absolute",
     inset: 0,
-    backgroundColor: "#000",
+    backgroundColor: theme.colors.night,
   },
   overlay: {
     position: "absolute",

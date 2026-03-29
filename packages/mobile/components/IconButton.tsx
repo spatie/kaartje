@@ -7,6 +7,7 @@ import Animated, {
   Easing,
 } from "react-native-reanimated";
 import { StyleSheet } from "react-native-unistyles";
+import { theme } from "../unistyles";
 
 const easeOut = Easing.bezier(0.2, 0.9, 0.1, 1);
 
@@ -63,8 +64,8 @@ const styles = StyleSheet.create((theme) => ({
           borderColor: theme.colors.border,
         },
         outline: {
-          backgroundColor: "rgba(10, 10, 12, 0.5)",
-          borderColor: "rgba(237, 230, 219, 0.3)",
+          backgroundColor: `${theme.colors.night}80`,
+          borderColor: `${theme.colors.ink}4D`,
         },
         ghost: {
           backgroundColor: "transparent",

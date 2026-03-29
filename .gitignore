@@ -12,3 +12,6 @@ dist/
 .expo/
 android/
 ios/
+
+# Docs (private deployment/ops notes)
+docs/

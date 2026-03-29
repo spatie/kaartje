@@ -7,7 +7,7 @@ import { StyleSheet } from "react-native-unistyles";
  * Dark, minimal palette inspired by postcards.
  */
 
-const theme = {
+export const theme = {
   colors: {
     // Backgrounds
     night: "#0a0a0c",
@@ -28,6 +28,12 @@ const theme = {
     stampHover: "#d4785e",
     postmark: "#a08c6a",
     airmail: "#4a7fb5",
+
+    // Postcard
+    postcardBack: "#f0ebe3",
+    postcardText: "#3a3632",
+    postcardDivider: "#c4bdb3",
+    postcardPlaceholder: "#b0a99e",
 
     // Semantic
     success: "#5a9a6b",

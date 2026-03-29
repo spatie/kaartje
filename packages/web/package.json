@@ -15,15 +15,16 @@
     "@react-three/fiber": "^9.5.0",
     "@tailwindcss/vite": "^4.2.2",
     "astro": "^6.0.8",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
     "tailwindcss": "^4.2.2",
     "three": "^0.183.2"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
     "@types/react-dom": "~19.2.2",
-    "@types/three": "^0.183.1"
+    "@types/three": "^0.183.1",
+    "typescript": "~5.9.2"
   },
   "engines": {
     "node": ">=22.12.0"

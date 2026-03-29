@@ -38,6 +38,8 @@ export interface DottedGlobeProps {
   onCardHover?: (data: StampHoverData | null) => void;
   /** Called on stamp click (pin) */
   onCardSelect?: (data: StampHoverData | null) => void;
+  /** Called when a live card finishes its flight animation */
+  onCardLanded?: (card: LiveCard, clockTime: number) => void;
   /** Pause globe rotation (e.g. when a card is focused) */
   paused?: boolean;
 }
@@ -280,27 +282,26 @@ const DotLayer = memo(function DotLayer({
     return size * scale;
   }, [size, viewportSize.width, viewportSize.height]);
 
-  const { geometry, uniforms } = useMemo(() => {
+  const geometry = useMemo(() => {
     const geo = new BufferGeometry();
     geo.setAttribute("position", new BufferAttribute(positions, 3));
     geo.setAttribute("aScale", new BufferAttribute(scales, 1));
+    return geo;
+  }, [positions, scales]);
 
-    return {
-      geometry: geo,
-      uniforms: {
-        uColor: { value: new Color(color) },
-        uPixelRatio: { value: gl.getPixelRatio() },
-        uSize: { value: responsiveSize },
-      },
-    };
-  }, [positions, scales, color, responsiveSize, gl]);
+  const uniforms = useMemo(() => ({
+    uColor: { value: new Color(color) },
+    uPixelRatio: { value: 1 },
+    uSize: { value: size },
+  }), [color, size]);
 
-  // Update size uniform when viewport changes without recreating geometry
+  // Update dynamic uniforms without recreating geometry or material
   useEffect(() => {
     if (materialRef.current) {
       materialRef.current.uniforms.uSize.value = responsiveSize;
+      materialRef.current.uniforms.uPixelRatio.value = gl.getPixelRatio();
     }
-  }, [responsiveSize]);
+  }, [responsiveSize, gl]);
 
   useEffect(() => {
     return () => geometry.dispose();
@@ -337,10 +338,81 @@ export const DottedGlobe = memo(function DottedGlobe({
   persistentCards = [],
   onCardHover,
   onCardSelect,
+  onCardLanded: onCardLandedProp,
   paused = false,
 }: DottedGlobeProps = {}) {
   const arcData = arcs ?? MOCK_ARCS;
   const groupRef = useRef<Group>(null!);
+
+  // Keep paused and callback in refs so event listeners always see the latest value
+  const pausedRef = useRef(paused);
+  pausedRef.current = paused;
+  const onCardLandedRef = useRef(onCardLandedProp);
+  onCardLandedRef.current = onCardLandedProp;
+
+  // --- Drag-to-rotate state ---
+  const isDragging = useRef(false);
+  const dragStartX = useRef(0);
+  const dragStartY = useRef(0);
+  const rotationAtDragStart = useRef(0);
+  const tiltAtDragStart = useRef(0);
+  const userTilt = useRef(0);
+  const idleTime = useRef(Infinity);
+  const autoRotateBlend = useRef(1); // 1 = full auto, 0 = user control
+  const RESUME_DELAY = 1;
+  const DRAG_SENSITIVITY = 0.005;
+
+  const { gl } = useThree();
+
+  // Attach drag listeners to the R3F event target (the container div that
+  // wraps the canvas). R3F listens on this element, so we use capture phase
+  // to fire before R3F processes the event. Move/up on window so dragging
+  // continues outside the canvas bounds.
+  useEffect(() => {
+    const canvas = gl.domElement;
+    // R3F attaches its pointer listeners to the canvas's parent div
+    const target = canvas.parentElement ?? canvas;
+
+    const onPointerDown = (e: PointerEvent) => {
+      if (pausedRef.current) return;
+      isDragging.current = true;
+      dragStartX.current = e.clientX;
+      dragStartY.current = e.clientY;
+      rotationAtDragStart.current = groupRef.current.rotation.y;
+      tiltAtDragStart.current = userTilt.current;
+      autoRotateBlend.current = 0;
+      idleTime.current = 0;
+      canvas.style.cursor = "grabbing";
+    };
+
+    const onPointerMove = (e: PointerEvent) => {
+      if (!isDragging.current) return;
+      const dx = e.clientX - dragStartX.current;
+      const dy = e.clientY - dragStartY.current;
+      groupRef.current.rotation.y = rotationAtDragStart.current + dx * DRAG_SENSITIVITY;
+      userTilt.current = Math.max(-1.4, Math.min(1.4, tiltAtDragStart.current + dy * DRAG_SENSITIVITY * 0.5));
+      idleTime.current = 0;
+      autoRotateBlend.current = 0;
+    };
+
+    const onPointerUp = () => {
+      if (isDragging.current) {
+        isDragging.current = false;
+        idleTime.current = 0;
+        canvas.style.cursor = "";
+      }
+    };
+
+    target.addEventListener("pointerdown", onPointerDown, { capture: true });
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+
+    return () => {
+      target.removeEventListener("pointerdown", onPointerDown, { capture: true });
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+    };
+  }, [gl]);
 
   // Landed cards state: stamps that stick to the rotating globe
   const [landedCards, setLandedCards] = useState<
@@ -356,27 +428,64 @@ export const DottedGlobe = memo(function DottedGlobe({
     }>
   >([]);
 
-  // Animate a small subset of persistent cards in via flight; the rest appear instantly
+  // Animate a small subset of persistent cards in via flight; the rest are
+  // streamed into InstancedStamps in small batches to avoid a frame spike.
   const MAX_ANIMATED = 5;
+  const BATCH_SIZE = 8; // cards added per batch tick
+  const BATCH_INTERVAL = 200; // ms between batches
+
   const [stagedFlights, setStagedFlights] = useState<LiveCard[]>([]);
   const [animatingIds, setAnimatingIds] = useState<Set<string>>(new Set());
+  const [streamedCards, setStreamedCards] = useState<LiveCard[]>([]);
   const stagedIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
+    // Prune stale IDs from previous persistentCards that are no longer present
+    const currentIds = new Set(persistentCards.map((c) => c.id));
+    for (const id of stagedIdsRef.current) {
+      if (!currentIds.has(id)) stagedIdsRef.current.delete(id);
+    }
+    setStreamedCards((prev) => {
+      const next = prev.filter((c) => currentIds.has(c.id));
+      return next.length === prev.length ? prev : next;
+    });
+
     const newCards = persistentCards.filter((c) => !stagedIdsRef.current.has(c.id));
     if (newCards.length === 0) return;
 
     for (const c of newCards) stagedIdsRef.current.add(c.id);
 
-    // Pick a few to animate, the rest appear as stamps immediately
+    // Pick a few to animate via flight
     const toAnimate = newCards.slice(0, MAX_ANIMATED);
-    setAnimatingIds(new Set(toAnimate.map((c) => c.id)));
+    const animIds = new Set(toAnimate.map((c) => c.id));
+    setAnimatingIds(animIds);
+
+    // Track all timers for cleanup
+    const timers: ReturnType<typeof setTimeout>[] = [];
 
     toAnimate.forEach((card, i) => {
-      setTimeout(() => {
+      timers.push(setTimeout(() => {
         setStagedFlights((prev) => [...prev, card]);
-      }, i * 1200);
+      }, i * 1200));
     });
+
+    // Stream the remaining cards in batches to avoid a single-frame spike
+    const rest = newCards.filter((c) => !animIds.has(c.id));
+    let offset = 0;
+
+    const pushBatch = () => {
+      const batch = rest.slice(offset, offset + BATCH_SIZE);
+      if (batch.length === 0) return;
+      offset += BATCH_SIZE;
+      setStreamedCards((prev) => [...prev, ...batch]);
+      if (offset < rest.length) {
+        timers.push(setTimeout(pushBatch, BATCH_INTERVAL));
+      }
+    };
+    // Start first batch after a short delay so the globe renders first
+    timers.push(setTimeout(pushBatch, 200));
+
+    return () => timers.forEach(clearTimeout);
   }, [persistentCards]);
 
   const handlePersistentLanded = useCallback((_card: LiveCard) => {
@@ -386,6 +495,8 @@ export const DottedGlobe = memo(function DottedGlobe({
       return next;
     });
     setStagedFlights((prev) => prev.filter((c) => c.id !== _card.id));
+    // Add to streamedCards so the card appears as a stamp after flight
+    setStreamedCards((prev) => [...prev, _card]);
   }, []);
 
   const handleCardLanded = useCallback((card: LiveCard, clockTime: number) => {
@@ -402,6 +513,7 @@ export const DottedGlobe = memo(function DottedGlobe({
         landedAt: clockTime,
       },
     ]);
+    onCardLandedRef.current?.(card, clockTime);
   }, []);
 
   const handleStampExpired = useCallback((id: string) => {
@@ -424,17 +536,51 @@ export const DottedGlobe = memo(function DottedGlobe({
 
   // Memoize filtered persistent cards to prevent unnecessary slot resyncs
   const visiblePersistentCards = useMemo(
-    () => persistentCards.filter((c) => !animatingIds.has(c.id)),
-    [persistentCards, animatingIds],
+    () => streamedCards.filter((c) => !animatingIds.has(c.id)),
+    [streamedCards, animatingIds],
   );
 
-  useFrame((_, delta) => {
-    if (!paused) groupRef.current.rotation.y += delta * rotationSpeed;
+  const tiltGroupRef = useRef<Group>(null!);
+
+  // Single useFrame for rotation + tilt (uses pausedRef to avoid stale closures)
+  useFrame((_, rawDelta) => {
+    // Clamp delta to avoid a huge spin after returning from a background tab
+    const delta = Math.min(rawDelta, 0.1);
+
+    // Track idle time using frame deltas
+    if (isDragging.current) {
+      idleTime.current = 0;
+    } else {
+      idleTime.current += delta;
+    }
+
+    const isPaused = pausedRef.current;
+
+    // Smoothly blend back to auto-rotation after drag ends (not while paused)
+    if (!isPaused && !isDragging.current && idleTime.current > RESUME_DELAY) {
+      autoRotateBlend.current = Math.min(1, autoRotateBlend.current + delta * 0.8);
+    }
+
+    // Auto-rotate when not paused and not being dragged
+    if (!isPaused && !isDragging.current && autoRotateBlend.current > 0) {
+      groupRef.current.rotation.y += delta * rotationSpeed * autoRotateBlend.current;
+    }
+
+    // Ease vertical tilt back to 0 when auto-rotating (not while paused)
+    if (!isPaused && autoRotateBlend.current > 0.5 && !isDragging.current) {
+      userTilt.current *= 1 - delta * 2;
+    }
+
+    // Apply user tilt
+    if (tiltGroupRef.current) {
+      tiltGroupRef.current.rotation.x = userTilt.current;
+    }
   });
 
   return (
     <>
       <group rotation={[0, 0, -11.7 * DEG]}>
+        <group ref={tiltGroupRef}>
         <group ref={groupRef} rotation={[0, initialRotation.current, 0]}>
           <mesh raycast={() => null}>
             <sphereGeometry args={[radius * 0.99, 64, 64]} />
@@ -463,6 +609,7 @@ export const DottedGlobe = memo(function DottedGlobe({
             onSelect={onCardSelect}
             onLandedExpired={handleStampExpired}
           />
+        </group>
         </group>
       </group>
 

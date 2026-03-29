@@ -10,7 +10,7 @@ export function LazyGlobe() {
 
   useEffect(() => {
     // Start loading after a short delay so the intro text animation isn't janked
-    const timer = setTimeout(() => setReady(true), 500);
+    const timer = setTimeout(() => setReady(true), 100);
     return () => clearTimeout(timer);
   }, []);
 

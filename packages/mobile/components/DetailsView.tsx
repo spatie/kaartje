@@ -2,6 +2,7 @@ import { useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, View } from "react-native";
 import { ArrowLeft } from "lucide-react-native";
 import { StyleSheet } from "react-native-unistyles";
+import { theme } from "../unistyles";
 import { Button } from "./Button";
 import { IconButton } from "./IconButton";
 
@@ -36,7 +37,7 @@ export function DetailsView({ onBack, onContinue, showLocationInput }: DetailsVi
         {/* Header */}
         <View style={styles.header}>
           <IconButton
-            icon={<ArrowLeft size={22} color="#ede6db" />}
+            icon={<ArrowLeft size={22} color={theme.colors.ink} />}
             variant="ghost"
             size={40}
             onPress={onBack}
@@ -77,7 +78,7 @@ export function DetailsView({ onBack, onContinue, showLocationInput }: DetailsVi
             value={message}
             onChangeText={setMessage}
             placeholder="Write your message..."
-            placeholderTextColor="#6b655c"
+            placeholderTextColor={theme.colors.inkLight}
             multiline
             textAlignVertical="top"
           />
@@ -88,7 +89,7 @@ export function DetailsView({ onBack, onContinue, showLocationInput }: DetailsVi
             value={senderName}
             onChangeText={setSenderName}
             placeholder="Your name"
-            placeholderTextColor="#6b655c"
+            placeholderTextColor={theme.colors.inkLight}
           />
 
           {showLocationInput && (
@@ -99,7 +100,7 @@ export function DetailsView({ onBack, onContinue, showLocationInput }: DetailsVi
                 value={country}
                 onChangeText={setCountry}
                 placeholder="Country (e.g. Belgium)"
-                placeholderTextColor="#6b655c"
+                placeholderTextColor={theme.colors.inkLight}
               />
             </>
           )}
@@ -148,7 +149,7 @@ const styles = StyleSheet.create((theme, rt) => ({
   card: {
     flexDirection: "row",
     aspectRatio: 3 / 2,
-    backgroundColor: "#f0ebe3",
+    backgroundColor: theme.colors.postcardBack,
     borderRadius: theme.radius.lg,
     overflow: "hidden",
     marginBottom: theme.space(8),
@@ -160,7 +161,7 @@ const styles = StyleSheet.create((theme, rt) => ({
   },
   cardDivider: {
     width: 1,
-    backgroundColor: "#c4bdb3",
+    backgroundColor: theme.colors.postcardDivider,
   },
   cardRight: {
     flex: 1,
@@ -170,16 +171,16 @@ const styles = StyleSheet.create((theme, rt) => ({
   cardMessage: {
     fontFamily: theme.fonts.sansItalic,
     fontSize: 11,
-    color: "#3a3632",
+    color: theme.colors.postcardText,
     lineHeight: 16,
   },
   cardMessagePlaceholder: {
-    color: "#b0a99e",
+    color: theme.colors.postcardPlaceholder,
   },
   cardFrom: {
     fontFamily: theme.fonts.sansMedium,
     fontSize: 10,
-    color: "#6b655c",
+    color: theme.colors.inkLight,
   },
   stamp: {
     width: 36,
@@ -195,14 +196,14 @@ const styles = StyleSheet.create((theme, rt) => ({
   addressLabel: {
     fontFamily: theme.fonts.sansBold,
     fontSize: 8,
-    color: "#9b9489",
+    color: theme.colors.inkFaded,
     letterSpacing: 2,
     marginBottom: theme.space(1),
   },
   addressLine: {
     fontFamily: theme.fonts.sans,
     fontSize: 11,
-    color: "#3a3632",
+    color: theme.colors.postcardText,
     lineHeight: 16,
   },
 

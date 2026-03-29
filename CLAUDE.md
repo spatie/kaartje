@@ -44,10 +44,12 @@ npm run ios --workspace=@kaartje/mobile
 ## Architecture
 
 - **npm workspaces** monorepo — packages live in `packages/*`
-- No shared packages or cross-package dependencies yet
+- **@kaartje/shared** — shared package consumed by web and mobile
+  - `@kaartje/shared` — 3D components (DottedGlobe, FocusedCard, etc.)
+  - `@kaartje/shared/api` — API client and shared types
 - Each package has its own `tsconfig.json` (API uses Bun types, Web extends Astro strict, Mobile extends Expo base)
 - API runs on Bun's native `Bun.serve()`, not Express or Hono
-- Web uses Astro (no UI framework integration yet)
+- Web uses Astro with React integration (`@astrojs/react`) for interactive islands
 - Mobile uses Expo Router (file-based routing in `app/` directory) with a Stack navigator
 
 ## Mobile Conventions
@@ -60,15 +62,19 @@ npm run ios --workspace=@kaartje/mobile
 
 A dark, minimal palette inspired by postcards. Warm paper tones on deep backgrounds, with stamp reds, postmark golds, and airmail blues as accents.
 
-| Token     | Hex       | Role             |
-| --------- | --------- | ---------------- |
-| Night     | `#0a0a0c` | Background       |
-| Surface   | `#141418` | Cards, sections  |
-| Elevated  | `#1e1e24` | Raised elements  |
-| Ink       | `#ede6db` | Primary text     |
-| Ink Faded | `#9b9489` | Secondary text   |
-| Stamp     | `#c45a3c` | Primary accent   |
-| Postmark  | `#a08c6a` | Secondary accent |
-| Airmail   | `#4a7fb5` | Tertiary accent  |
+| Token                | Hex       | Role                  |
+| -------------------- | --------- | --------------------- |
+| Night                | `#0a0a0c` | Background            |
+| Surface              | `#141418` | Cards, sections       |
+| Elevated             | `#1e1e24` | Raised elements       |
+| Ink                  | `#ede6db` | Primary text          |
+| Ink Faded            | `#9b9489` | Secondary text        |
+| Stamp                | `#c45a3c` | Primary accent        |
+| Postmark             | `#a08c6a` | Secondary accent      |
+| Airmail              | `#4a7fb5` | Tertiary accent       |
+| Postcard Back        | `#f0ebe3` | Postcard paper color  |
+| Postcard Text        | `#3a3632` | Text on postcard back |
+| Postcard Divider     | `#c4bdb3` | Postcard divider line |
+| Postcard Placeholder | `#b0a99e` | Postcard placeholder  |
 
 Typography: **DM Serif Display** for headings, **DM Sans** for body text. Tokens are defined in Tailwind's `@theme` (web) and react-native-unistyles (mobile), kept in sync across both platforms.

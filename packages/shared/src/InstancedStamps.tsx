@@ -26,11 +26,13 @@ const FADE_DURATION = 3;
 
 // Module-level scratch objects (reused every frame, no GC pressure)
 const _quat = new Quaternion();
+const _prevQuat = new Quaternion();
 const _pos = new Vector3();
 const _scale = new Vector3();
 const _dummy = new Object3D();
 
 const FADE_IN_SPEED = 0.04;
+const QUAT_EPSILON = 0.0001;
 
 interface InstanceSlot {
   card: LiveCard;
@@ -97,7 +99,18 @@ export const InstancedStamps = memo(function InstancedStamps({
     });
   }
 
-  // Sync cards → instance slots + initialize matrices for raycasting
+  // Cleanup GPU resources and cursor style on unmount
+  useEffect(() => {
+    return () => {
+      if (typeof document !== "undefined") document.body.style.cursor = "";
+      atlasRef.current?.dispose();
+      atlasRef.current = null;
+      materialRef.current?.dispose();
+      materialRef.current = null;
+    };
+  }, []);
+
+  // Sync cards → instance slots incrementally (only add/remove changed cards)
   useEffect(() => {
     const mesh = meshRef.current;
     const slots = slotsRef.current;
@@ -107,49 +120,63 @@ export const InstancedStamps = memo(function InstancedStamps({
     ];
     const currentIds = new Set(allCards.map((c) => c.card.id));
 
+    let needsReindex = false;
+
     // Remove slots for cards that no longer exist
     for (const [id, slot] of slots) {
       if (!currentIds.has(id)) {
         atlas.releaseLayer(slot.layerIndex);
         slots.delete(id);
+        needsReindex = true;
       }
     }
 
-    // Add slots for new cards
+    // Add slots for new cards (append at end, only init new ones)
+    // Guard: never exceed MAX_INSTANCES to avoid buffer overflow
+    const newSlots: InstanceSlot[] = [];
     for (const { card, landedAt } of allCards) {
       if (!slots.has(card.id)) {
+        if (slots.size >= MAX_INSTANCES) break;
         const layerIndex = atlas.allocateLayer(card.frontImageUrl);
-        slots.set(card.id, {
+        if (layerIndex < 0) continue; // atlas at capacity
+        const slot: InstanceSlot = {
           card,
-          index: -1, // assigned below
+          index: -1,
           layerIndex,
           landedAt,
           targetScale: 1,
           currentScale: 1,
           currentOpacity: 0,
           position: latLngToVec3(card.latitude, card.longitude, radius * 1.01),
-        });
+        };
+        slots.set(card.id, slot);
+        newSlots.push(slot);
+        needsReindex = true;
       }
     }
 
-    // Reassign contiguous indices and initialize instance matrices
+    if (!needsReindex) return;
+
+    // Only re-index when slots were added or removed
     let idx = 0;
     for (const slot of slots.values()) {
       slot.index = idx;
-      // Set an initial position so raycasting has valid matrices
-      if (mesh) {
-        const pos = latLngToVec3(slot.card.latitude, slot.card.longitude, radius * 1.01);
-        _dummy.position.set(pos[0], pos[1], pos[2]);
-        _dummy.scale.set(STAMP_W, STAMP_H, 1);
-        _dummy.updateMatrix();
-        mesh.setMatrixAt(idx, _dummy.matrix);
-      }
       idx++;
     }
     activeCount.current = idx;
 
+    // Only initialize matrices for newly added slots
+    if (mesh && newSlots.length > 0) {
+      for (const slot of newSlots) {
+        _dummy.position.set(slot.position[0], slot.position[1], slot.position[2]);
+        _dummy.scale.set(STAMP_W, STAMP_H, 1);
+        _dummy.updateMatrix();
+        mesh.setMatrixAt(slot.index, _dummy.matrix);
+      }
+    }
+
     // Build reverse lookup for O(1) raycasting
-    const lookup: InstanceSlot[] = new Array(idx);
+    const lookup: InstanceSlot[] = Array.from({ length: idx });
     for (const slot of slots.values()) {
       lookup[slot.index] = slot;
     }
@@ -158,7 +185,6 @@ export const InstancedStamps = memo(function InstancedStamps({
     if (mesh) {
       mesh.count = idx;
       mesh.instanceMatrix.needsUpdate = true;
-      // Fixed bounding sphere — all stamps are on a globe of known radius
       if (mesh.boundingSphere) {
         mesh.boundingSphere.center.set(0, 0, 0);
         mesh.boundingSphere.radius = radius * 1.5;
@@ -167,11 +193,17 @@ export const InstancedStamps = memo(function InstancedStamps({
   }, [persistentCards, landedCards, atlas, radius]);
 
   // Per-frame update: billboard matrices, opacity, scale, expiry
+  // Track whether any instance data actually changed to skip needless GPU uploads
+  const onLandedExpiredRef = useRef(onLandedExpired);
+  onLandedExpiredRef.current = onLandedExpired;
+
   useFrame((state) => {
     const mesh = meshRef.current;
     if (!mesh) return;
 
     const slots = slotsRef.current;
+    if (slots.size === 0) return;
+
     const clock = state.clock.elapsedTime;
 
     // Get parent world quaternion (one call for all instances)
@@ -183,34 +215,46 @@ export const InstancedStamps = memo(function InstancedStamps({
     // Billboard quaternion: camera quat in local space
     _quat.copy(camera.quaternion).premultiply(parentInvQuat.current);
 
+    // Check if billboard orientation actually changed (avoids GPU upload when paused/idle)
+    const quatChanged = Math.abs(_quat.x - _prevQuat.x) > QUAT_EPSILON
+      || Math.abs(_quat.y - _prevQuat.y) > QUAT_EPSILON
+      || Math.abs(_quat.z - _prevQuat.z) > QUAT_EPSILON
+      || Math.abs(_quat.w - _prevQuat.w) > QUAT_EPSILON;
+    _prevQuat.copy(_quat);
+
+    // Guard against null after unmount cleanup
+    const mat = materialRef.current;
+    if (!mat) return;
+
     // Update camera position uniform
-    materialRef.current!.uniforms.uCameraPosition.value.copy(camera.position);
+    mat.uniforms.uCameraPosition.value.copy(camera.position);
 
     const layerData = layerAttr.current;
     const opacityData = opacityAttr.current;
 
     const expiredIds: string[] = [];
+    let attrDirty = false;
+    let anyMatrixDirty = false;
 
     for (const slot of slots.values()) {
       const i = slot.index;
-      _pos.set(slot.position[0], slot.position[1], slot.position[2]);
 
-      // Lerp scale for hover
-      slot.currentScale += (slot.targetScale - slot.currentScale) * SCALE_LERP;
-      const s = STAMP_W * slot.currentScale;
-      _scale.set(s, STAMP_H * slot.currentScale, 1);
-
-      // Compose instance matrix: position + billboard rotation + scale
-      _dummy.position.copy(_pos);
-      _dummy.quaternion.copy(_quat);
-      _dummy.scale.copy(_scale);
-      _dummy.updateMatrix();
-      mesh.setMatrixAt(i, _dummy.matrix);
+      // Lerp scale for hover — per-slot matrix dirty
+      const scaleDelta = (slot.targetScale - slot.currentScale) * SCALE_LERP;
+      let slotScaleChanged = false;
+      if (Math.abs(scaleDelta) > 0.001) {
+        slot.currentScale += scaleDelta;
+        slotScaleChanged = true;
+      }
 
       // Fade in when texture is loaded
       const loaded = atlas.isLoaded(slot.layerIndex);
       const targetOpacity = loaded ? 1 : 0;
-      slot.currentOpacity += (targetOpacity - slot.currentOpacity) * FADE_IN_SPEED;
+      const opacityDelta = (targetOpacity - slot.currentOpacity) * FADE_IN_SPEED;
+      if (Math.abs(opacityDelta) > 0.001) {
+        slot.currentOpacity += opacityDelta;
+        attrDirty = true;
+      }
 
       // Landed card expiry fade
       let opacity = slot.currentOpacity;
@@ -218,25 +262,50 @@ export const InstancedStamps = memo(function InstancedStamps({
         const age = clock - slot.landedAt;
         if (age > PERSIST_DURATION + FADE_DURATION) {
           expiredIds.push(slot.card.id);
+          slot.landedAt = undefined; // prevent re-firing every frame
           opacity = 0;
+          attrDirty = true;
         } else if (age > PERSIST_DURATION) {
           opacity *= 1.0 - (age - PERSIST_DURATION) / FADE_DURATION;
+          attrDirty = true;
         }
       }
 
       // Write per-instance attributes
       if (layerData) layerData.setX(i, slot.layerIndex);
       if (opacityData) opacityData.setX(i, opacity);
+
+      // Only recompute matrix when billboard orientation changed OR this slot's scale changed
+      if (quatChanged || slotScaleChanged) {
+        _pos.set(slot.position[0], slot.position[1], slot.position[2]);
+        const s = STAMP_W * slot.currentScale;
+        _scale.set(s, STAMP_H * slot.currentScale, 1);
+        _dummy.position.copy(_pos);
+        _dummy.quaternion.copy(_quat);
+        _dummy.scale.copy(_scale);
+        _dummy.updateMatrix();
+        mesh.setMatrixAt(i, _dummy.matrix);
+        anyMatrixDirty = true;
+      }
     }
 
     mesh.count = activeCount.current;
-    mesh.instanceMatrix.needsUpdate = true;
-    if (layerData) layerData.needsUpdate = true;
-    if (opacityData) opacityData.needsUpdate = true;
+    if (anyMatrixDirty) {
+      mesh.instanceMatrix.needsUpdate = true;
+    }
+    if (attrDirty) {
+      if (layerData) layerData.needsUpdate = true;
+      if (opacityData) opacityData.needsUpdate = true;
+    }
 
-    // Fire expiry callbacks outside the loop
-    for (const id of expiredIds) {
-      onLandedExpired?.(id);
+    // Batch expiry callbacks — fire after the loop so React can batch the state updates
+    if (expiredIds.length > 0) {
+      const cb = onLandedExpiredRef.current;
+      if (cb) {
+        for (const id of expiredIds) {
+          cb(id);
+        }
+      }
     }
   });
 
@@ -274,7 +343,7 @@ export const InstancedStamps = memo(function InstancedStamps({
         if (typeof document !== "undefined") document.body.style.cursor = "pointer";
         onHover?.(makeHoverData(slot));
       }}
-      onPointerOut={(e) => {
+      onPointerOut={(_e) => {
         if (hoveredId.current) {
           const slot = slotsRef.current.get(hoveredId.current);
           if (slot) slot.targetScale = 1;
@@ -288,7 +357,7 @@ export const InstancedStamps = memo(function InstancedStamps({
         if (e.instanceId == null) return;
         const slot = getSlotByIndex(e.instanceId);
         if (!slot) return;
-        onSelect?.(makeHoverData(slot, e.point ? new Vector3(e.point.x, e.point.y, e.point.z) : undefined));
+        onSelect?.(makeHoverData(slot, e.point ?? undefined));
       }}
     >
       <planeGeometry args={[1, 1]}>

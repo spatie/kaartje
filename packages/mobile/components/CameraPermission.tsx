@@ -10,6 +10,7 @@ import Animated, {
   Easing,
 } from "react-native-reanimated";
 import { StyleSheet } from "react-native-unistyles";
+import { theme } from "../unistyles";
 import { Button } from "./Button";
 import { usePostcard } from "../contexts/PostcardContext";
 
@@ -82,7 +83,7 @@ export function CameraPermission({ onPermissionGranted }: CameraPermissionProps)
   if (loading) {
     return (
       <Animated.View style={[styles.container, animatedStyle]}>
-        <ActivityIndicator size="large" color="#c45a3c" style={styles.spinner} />
+        <ActivityIndicator size="large" color={theme.colors.stamp} style={styles.spinner} />
         <Text style={styles.loadingText}>Getting ready...</Text>
       </Animated.View>
     );
@@ -91,7 +92,7 @@ export function CameraPermission({ onPermissionGranted }: CameraPermissionProps)
   return (
     <Animated.View style={[styles.container, animatedStyle]}>
       <View style={styles.iconContainer}>
-        <CameraIcon size={48} strokeWidth={1.5} color="#c45a3c" />
+        <CameraIcon size={48} strokeWidth={1.5} color={theme.colors.stamp} />
       </View>
 
       <Text style={styles.title}>Scan Postcards</Text>

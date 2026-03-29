@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay, Easing } from 'react-native-reanimated';
 import { StyleSheet } from 'react-native-unistyles';
 import { Button } from './Button';
+import type { Photo } from '../contexts/PostcardContext';
 
 const easeOut = Easing.bezier(0.2, 0.9, 0.1, 1);
 
@@ -24,12 +25,6 @@ const CAMERA_FOV = 45;
 
 function lerp(a: number, b: number, t: number) {
     return a + (b - a) * t;
-}
-
-interface Photo {
-    path: string;
-    width: number;
-    height: number;
 }
 
 interface PostcardPreviewProps {

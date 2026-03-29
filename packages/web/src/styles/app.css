@@ -31,6 +31,12 @@
   --color-postmark: #a08c6a;
   --color-airmail: #4a7fb5;
 
+  /* Postcard */
+  --color-postcard-back: #f0ebe3;
+  --color-postcard-text: #3a3632;
+  --color-postcard-divider: #c4bdb3;
+  --color-postcard-placeholder: #b0a99e;
+
   /* Semantic */
   --color-success: #5a9a6b;
   --color-warning: #c49a3c;
