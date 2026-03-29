@@ -99,34 +99,42 @@ export function PostcardFlight({
     [senderName, message, country],
   );
 
-  const seed = useMemo(() => hashSeed(id), [id]);
+  // Mix deterministic hash with random value so each reload produces different paths
+  const seed = useMemo(() => {
+    const hash = hashSeed(id);
+    const rand = Math.random();
+    return (hash + rand) % 1;
+  }, [id]);
 
   const landingPos = useMemo(
     () => new Vector3(...latLngToVec3(latitude, longitude, radius)),
     [latitude, longitude, radius],
   );
 
-  // Start from camera position — card appears to fly "from the viewer"
+  // Start from camera position with random offset so cards fan out
   const startPos = useMemo(() => {
-    return camera.position.clone();
+    const pos = camera.position.clone();
+    pos.x += (seed - 0.5) * 3;
+    pos.y += (Math.random() - 0.5) * 2;
+    return pos;
   }, []);
 
   // Orbit waypoint: a point near the globe surface offset from the landing spot
-  // Seed varies the approach angle and height so cards spread vertically
+  // Randomized approach angle and height so cards spread differently each load
   const orbitPos = useMemo(() => {
     const landDir = landingPos.clone().normalize();
-    // Rotate around Y by a seed-varied angle for horizontal spread
-    const offsetAngle = (0.3 + seed * 0.5) * Math.PI * 0.5;
+    // Random approach angle for horizontal spread
+    const offsetAngle = (0.2 + seed * 0.8) * Math.PI * (Math.random() > 0.5 ? 1 : -1) * 0.5;
     const cos = Math.cos(offsetAngle);
     const sin = Math.sin(offsetAngle);
-    // Vary Y offset: spread from -0.4 to +0.4 based on seed
-    const yOffset = (seed - 0.5) * 0.8;
+    // Random Y offset for vertical spread
+    const yOffset = (seed - 0.5) * 1.2;
     const offsetDir = new Vector3(
       landDir.x * cos + landDir.z * sin,
       landDir.y + yOffset,
       -landDir.x * sin + landDir.z * cos,
     ).normalize();
-    return offsetDir.multiplyScalar(radius * 1.4);
+    return offsetDir.multiplyScalar(radius * (1.2 + Math.random() * 0.4));
   }, [landingPos, radius, seed]);
 
   const uniforms = useRef({
