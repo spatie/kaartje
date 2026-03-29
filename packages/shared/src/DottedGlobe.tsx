@@ -430,7 +430,7 @@ export const DottedGlobe = memo(function DottedGlobe({
 
   // Animate a small subset of persistent cards in via flight on first load only;
   // subsequent batches go straight to stamps without flight animation.
-  const MAX_ANIMATED = 5;
+  const MAX_ANIMATED = 10;
 
   const [stagedFlights, setStagedFlights] = useState<LiveCard[]>([]);
   const [animatingIds, setAnimatingIds] = useState<Set<string>>(new Set());
