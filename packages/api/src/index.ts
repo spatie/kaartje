@@ -9,6 +9,25 @@ import { handlePresign, handleUpload } from "./routes/uploads";
 import { websocket, broadcast } from "./ws/handler";
 
 const port = Number(process.env.PORT) || 3000;
+const API_KEY = process.env.API_KEY;
+
+// Routes that require API key authentication
+const PROTECTED_PREFIXES = ["/postcards", "/uploads", "/images/"];
+
+function requiresAuth(pathname: string): boolean {
+  return PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+}
+
+function isAuthorized(req: Request): boolean {
+  if (!API_KEY) return true; // No key configured = no auth (local dev)
+  // Check header (API/fetch calls)
+  const header = req.headers.get("X-API-Key");
+  if (header === API_KEY) return true;
+  // Check query param (for <img> tags that can't set headers)
+  const url = new URL(req.url);
+  const queryKey = url.searchParams.get("key");
+  return queryKey === API_KEY;
+}
 
 const server = Bun.serve({
   port,
@@ -31,12 +50,20 @@ const server = Bun.serve({
     const corsHeaders = {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
+      "Access-Control-Allow-Headers": "Content-Type, X-API-Key",
     };
 
     // Preflight
     if (method === "OPTIONS") {
       return new Response(null, { status: 204, headers: corsHeaders });
+    }
+
+    // API key check for protected routes
+    if (requiresAuth(pathname) && !isAuthorized(req)) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
     }
 
     // Route matching

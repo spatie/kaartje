@@ -36,7 +36,9 @@ export async function createPresignedDownloadUrl(key: string) {
 export function getPublicUrl(key: string) {
   // If the key is already an absolute URL, return it directly
   if (key.startsWith("http://") || key.startsWith("https://")) return key;
-  // Always serve via API proxy — bucket is private, only the server has S3 credentials
+  // Serve via API proxy — bucket is private, only the server has S3 credentials
   const apiUrl = process.env.PUBLIC_API_URL ?? `http://localhost:${process.env.PORT ?? 3000}`;
-  return `${apiUrl}/images/${key}`;
+  const apiKey = process.env.API_KEY;
+  const token = apiKey ? `?key=${apiKey}` : "";
+  return `${apiUrl}/images/${key}${token}`;
 }

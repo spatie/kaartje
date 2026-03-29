@@ -14,6 +14,7 @@ services:
       - S3_SECRET_ACCESS_KEY=${S3_SECRET_ACCESS_KEY}
       - S3_INTERNAL_ENDPOINT=${S3_ENDPOINT}
       - PUBLIC_API_URL=https://kaartje.earth
+      - API_KEY=${API_KEY}
     depends_on:
       - libsql
     labels:
@@ -33,6 +34,7 @@ services:
       dockerfile: Dockerfile.web
       args:
         PUBLIC_API_URL: https://kaartje.earth
+        PUBLIC_API_KEY: ${API_KEY}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.kaartje-web.rule=Host(`kaartje.earth`)"

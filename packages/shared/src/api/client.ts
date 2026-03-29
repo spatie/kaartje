@@ -9,14 +9,17 @@ import type {
 
 export interface ApiClientOptions {
   baseUrl: string;
+  apiKey?: string;
 }
 
 export class ApiClient {
   private baseUrl: string;
+  private apiKey?: string;
 
-  constructor({ baseUrl }: ApiClientOptions) {
+  constructor({ baseUrl, apiKey }: ApiClientOptions) {
     // Strip trailing slash
     this.baseUrl = baseUrl.replace(/\/+$/, "");
+    this.apiKey = apiKey;
   }
 
   // ---------------------------------------------------------------------------
@@ -24,12 +27,17 @@ export class ApiClient {
   // ---------------------------------------------------------------------------
 
   private async request<T>(path: string, init?: RequestInit): Promise<T> {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      ...init?.headers as Record<string, string>,
+    };
+    if (this.apiKey) {
+      headers["X-API-Key"] = this.apiKey;
+    }
+
     const res = await fetch(`${this.baseUrl}${path}`, {
       ...init,
-      headers: {
-        "Content-Type": "application/json",
-        ...init?.headers,
-      },
+      headers,
     });
 
     if (!res.ok) {

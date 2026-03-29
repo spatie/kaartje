@@ -7,6 +7,7 @@ import { ApiClient } from "@kaartje/shared/api";
 import type { WsEvent } from "@kaartje/shared/api";
 
 const API_BASE_URL = import.meta.env.PUBLIC_API_URL ?? "http://localhost:3000";
+const API_KEY = import.meta.env.PUBLIC_API_KEY ?? "";
 
 const MIN_DELAY_MS = 800;
 
@@ -56,7 +57,7 @@ export function NetworkSphereView() {
   }, [tryReveal]);
 
   // Single API client instance
-  const client = useMemo(() => new ApiClient({ baseUrl: API_BASE_URL }), []);
+  const client = useMemo(() => new ApiClient({ baseUrl: API_BASE_URL, apiKey: API_KEY }), []);
 
   // Fetch postcards in batches, preload each image before adding to globe
   useEffect(() => {
