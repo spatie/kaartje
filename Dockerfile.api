@@ -11,8 +11,6 @@ FROM oven/bun:1
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/packages/api/node_modules ./packages/api/node_modules
-COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
 COPY packages/api packages/api
 COPY packages/shared packages/shared
 COPY package.json tsconfig.json ./
