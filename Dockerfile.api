@@ -1,0 +1,15 @@
+FROM oven/bun:1 AS base
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+COPY packages/api/package.json packages/api/
+COPY packages/shared/package.json packages/shared/
+
+RUN npm install --workspace=@kaartje/api --workspace=@kaartje/shared
+
+COPY packages/api packages/api
+COPY packages/shared packages/shared
+COPY tsconfig.json ./
+
+EXPOSE 3000
+CMD ["bun", "run", "packages/api/src/index.ts"]
