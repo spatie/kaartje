@@ -18,9 +18,13 @@ export async function listPostcards(_req: Request): Promise<Response> {
     : await db.select().from(postcards);
 
   const result = rows.map((row) => ({
-    ...row,
+    id: row.id,
     frontImageUrl: getPublicUrl(row.frontImageKey),
-    backImageUrl: row.backImageKey ? getPublicUrl(row.backImageKey) : null,
+    latitude: row.latitude != null ? Math.round(row.latitude * 100) / 100 : null,
+    longitude: row.longitude != null ? Math.round(row.longitude * 100) / 100 : null,
+    senderName: row.senderName,
+    message: row.message,
+    country: row.country,
   }));
 
   return Response.json(result);
@@ -34,9 +38,13 @@ export async function getPostcard(id: string): Promise<Response> {
   }
 
   return Response.json({
-    ...row,
+    id: row.id,
     frontImageUrl: getPublicUrl(row.frontImageKey),
-    backImageUrl: row.backImageKey ? getPublicUrl(row.backImageKey) : null,
+    latitude: row.latitude != null ? Math.round(row.latitude * 100) / 100 : null,
+    longitude: row.longitude != null ? Math.round(row.longitude * 100) / 100 : null,
+    senderName: row.senderName,
+    message: row.message,
+    country: row.country,
   });
 }
 
@@ -86,25 +94,22 @@ export async function createPostcard(req: Request): Promise<Response> {
 
   const [created] = await db.select().from(postcards).where(eq(postcards.id, id));
 
+  const publicPostcard = {
+    id: created.id,
+    frontImageUrl: getPublicUrl(created.frontImageKey),
+    latitude: created.latitude != null ? Math.round(created.latitude * 100) / 100 : null,
+    longitude: created.longitude != null ? Math.round(created.longitude * 100) / 100 : null,
+    senderName: created.senderName,
+    message: created.message,
+    country: created.country,
+  };
+
   broadcast({
     event: "card:scanned",
-    data: {
-      postcard: {
-        ...created,
-        frontImageUrl: getPublicUrl(created.frontImageKey),
-        backImageUrl: created.backImageKey ? getPublicUrl(created.backImageKey) : null,
-      },
-    },
+    data: { postcard: publicPostcard },
   });
 
-  return Response.json(
-    {
-      ...created,
-      frontImageUrl: getPublicUrl(created.frontImageKey),
-      backImageUrl: created.backImageKey ? getPublicUrl(created.backImageKey) : null,
-    },
-    { status: 201 },
-  );
+  return Response.json(publicPostcard, { status: 201 });
 }
 
 export async function updatePostcardStatus(id: string, req: Request): Promise<Response> {
