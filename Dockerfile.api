@@ -1,11 +1,11 @@
 FROM oven/bun:1 AS base
 WORKDIR /app
 
-COPY package.json package-lock.json ./
+COPY package.json ./
 COPY packages/api/package.json packages/api/
 COPY packages/shared/package.json packages/shared/
 
-RUN bun install --filter='@kaartje/api' --filter='@kaartje/shared'
+RUN bun install
 
 COPY packages/api packages/api
 COPY packages/shared packages/shared
