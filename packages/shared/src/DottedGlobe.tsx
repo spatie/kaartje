@@ -468,12 +468,7 @@ export const DottedGlobe = memo(function DottedGlobe({
       const animIds = new Set(toAnimate.map((c) => c.id));
       setAnimatingIds(animIds);
 
-      toAnimate.forEach((card, i) => {
-        const timer = setTimeout(() => {
-          setStagedFlights((prev) => [...prev, card]);
-        }, i * 1200);
-        flightTimers.current.push(timer);
-      });
+      setStagedFlights(toAnimate);
 
       // Rest of first batch goes straight to stamps
       const rest = newCards.filter((c) => !animIds.has(c.id));
