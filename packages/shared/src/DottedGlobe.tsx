@@ -437,6 +437,12 @@ export const DottedGlobe = memo(function DottedGlobe({
   const [streamedCards, setStreamedCards] = useState<LiveCard[]>([]);
   const stagedIdsRef = useRef<Set<string>>(new Set());
   const initialFlightsDone = useRef(false);
+  const flightTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  // Cleanup flight timers on unmount only
+  useEffect(() => {
+    return () => flightTimers.current.forEach(clearTimeout);
+  }, []);
 
   useEffect(() => {
     // Prune stale IDs from previous persistentCards that are no longer present
@@ -454,8 +460,6 @@ export const DottedGlobe = memo(function DottedGlobe({
 
     for (const c of newCards) stagedIdsRef.current.add(c.id);
 
-    const timers: ReturnType<typeof setTimeout>[] = [];
-
     // Only animate flights for the very first batch
     if (!initialFlightsDone.current) {
       initialFlightsDone.current = true;
@@ -465,9 +469,10 @@ export const DottedGlobe = memo(function DottedGlobe({
       setAnimatingIds(animIds);
 
       toAnimate.forEach((card, i) => {
-        timers.push(setTimeout(() => {
+        const timer = setTimeout(() => {
           setStagedFlights((prev) => [...prev, card]);
-        }, i * 1200));
+        }, i * 1200);
+        flightTimers.current.push(timer);
       });
 
       // Rest of first batch goes straight to stamps
@@ -479,8 +484,6 @@ export const DottedGlobe = memo(function DottedGlobe({
       // Subsequent batches: add directly to stamps, no flight animation
       setStreamedCards((prev) => [...prev, ...newCards]);
     }
-
-    return () => timers.forEach(clearTimeout);
   }, [persistentCards]);
 
   const handlePersistentLanded = useCallback((_card: LiveCard) => {
