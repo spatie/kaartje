@@ -408,8 +408,9 @@ export function FocusedCard({ card, globeRadius, onClose }: FocusedCardProps) {
     }
   };
 
-  // Escape to close
+  // Escape to close (web only)
   useEffect(() => {
+    if (typeof window === "undefined" || !window.addEventListener) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") startClose();
     };

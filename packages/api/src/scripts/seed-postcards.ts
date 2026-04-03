@@ -260,11 +260,18 @@ const NAMES = [
 async function seed() {
   // Clear existing postcards first
   console.log("Clearing existing postcards...");
-  const existing = await fetch(`${API_URL}/postcards`).then((r) => r.json());
-  for (const card of existing) {
-    await fetch(`${API_URL}/postcards/${card.id}`, { method: "DELETE" }).catch(() => {});
-  }
-  console.log(`Cleared ${existing.length} postcards.`);
+  let cleared = 0;
+  let cursor: string | null = null;
+  do {
+    const url: string = `${API_URL}/postcards?limit=50${cursor ? `&cursor=${cursor}` : ""}`;
+    const { postcards, nextCursor }: { postcards: { id: string }[]; nextCursor: string | null } = await fetch(url).then((r) => r.json());
+    for (const card of postcards) {
+      await fetch(`${API_URL}/postcards/${card.id}`, { method: "DELETE" }).catch(() => {});
+      cleared++;
+    }
+    cursor = nextCursor ?? null;
+  } while (cursor);
+  console.log(`Cleared ${cleared} postcards.`);
 
   // Download images to MinIO first
   console.log(`Uploading ${CITIES.length} images to MinIO...`);

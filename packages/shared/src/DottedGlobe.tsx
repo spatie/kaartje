@@ -404,13 +404,17 @@ export const DottedGlobe = memo(function DottedGlobe({
     };
 
     target.addEventListener("pointerdown", onPointerDown, { capture: true });
-    window.addEventListener("pointermove", onPointerMove);
-    window.addEventListener("pointerup", onPointerUp);
+    if (typeof window !== "undefined" && window.addEventListener) {
+      window.addEventListener("pointermove", onPointerMove);
+      window.addEventListener("pointerup", onPointerUp);
+    }
 
     return () => {
       target.removeEventListener("pointerdown", onPointerDown, { capture: true });
-      window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("pointerup", onPointerUp);
+      if (typeof window !== "undefined" && window.removeEventListener) {
+        window.removeEventListener("pointermove", onPointerMove);
+        window.removeEventListener("pointerup", onPointerUp);
+      }
     };
   }, [gl]);
 
