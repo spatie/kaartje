@@ -24,6 +24,7 @@ services:
       - "traefik.http.routers.kaartje-api.tls=true"
       - "traefik.http.routers.kaartje-api.tls.certresolver=letsencrypt"
       - "traefik.http.services.kaartje-api.loadbalancer.server.port=3000"
+      - "traefik.docker.network=coolify"
     networks:
       - default
       - coolify
@@ -43,6 +44,7 @@ services:
       - "traefik.http.routers.kaartje-web.tls=true"
       - "traefik.http.routers.kaartje-web.tls.certresolver=letsencrypt"
       - "traefik.http.services.kaartje-web.loadbalancer.server.port=4321"
+      - "traefik.docker.network=coolify"
     networks:
       - default
       - coolify
